@@ -12,13 +12,14 @@ private:
 
     Rectangle boundary;
     bool splitted;
-
     std::vector<Particle*> p;
-    //std::vector<Particle> p;
     unsigned short capacity;
     unsigned short mul;
 
+
 public:
+
+    unsigned short deleted;
 
     QuadTree *nw;
     QuadTree *ne;
@@ -31,11 +32,13 @@ public:
 
     QuadTree(Rectangle b, unsigned short cap, unsigned short mul);
 
+    void clear();
+
     void Draw(SDL_Renderer* r);
 
     unsigned short size();
 
-    short knots();
+    unsigned short nodes();
 
     bool query(Rectangle& r, std::vector<Particle*>& rp);
 

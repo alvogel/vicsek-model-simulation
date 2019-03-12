@@ -20,7 +20,7 @@ const unsigned int n = 10000; // Quantity of particles
 
 using namespace std;
 
-void Draw(SDL_Renderer *renderer, VicsekQTMT& quad)
+void Draw(SDL_Renderer *renderer, VicsekQT& quad)
 {
     while(1)
     {
@@ -45,8 +45,8 @@ int frames = 0;
 int main( int argc, char* args[] )
 {
     //Vicsek sim = Vicsek(SCREEN_WIDTH, SCREEN_HEIGHT, v, radius, n); // Vicsek-Model with naive neighbour search O(n^2)
-    //VicsekQT sim = VicsekQT(SCREEN_WIDTH, SCREEN_HEIGHT, v, radius, n); // Vicsek-Model using QuadTree for neighbour search O(log(n))
-    VicsekQTMT sim = VicsekQTMT(SCREEN_WIDTH, SCREEN_HEIGHT, v, radius, n); // Vicsek-Model using QuadTree for neighbour search O(log(n)) and Multi-Threading
+    VicsekQT sim = VicsekQT(SCREEN_WIDTH, SCREEN_HEIGHT, v, radius, n); // Vicsek-Model using QuadTree for neighbour search O(log(n))
+    //VicsekQTMT sim = VicsekQTMT(SCREEN_WIDTH, SCREEN_HEIGHT, v, radius, n); // Vicsek-Model using QuadTree for neighbour search O(log(n)) and Multi-Threading
 
     //The window we'll be rendering to
     SDL_Window* window = NULL;
@@ -108,6 +108,8 @@ int main( int argc, char* args[] )
                     cout << "Simulation time: " <<sim_time << "ms"<< endl;
                     //int sum = sim.qt1.size()+sim.qt2.size()+sim.qt3.size()+sim.qt4.size()+sim.qt5.size()+sim.qt6.size()+sim.qt7.size()+sim.qt8.size();
 //                    cout << "Particle im QuadTree:" << sum << endl;
+                    //cout << "QuadTree Nodes:" << sim.qt.nodes() << endl;
+                    //cout << "Gelöscht:" << sim.qt.deleted << endl;
                     frames = 0;
                     start_time = millis();
                 }

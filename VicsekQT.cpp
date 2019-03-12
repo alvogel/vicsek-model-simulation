@@ -26,7 +26,7 @@ VicsekQT::Step()
 
     Rectangle r = Rectangle(this->w/2.0, this->h/2.0, this->w, this->h);
 
-    this->qt = QuadTree(r,4,1);
+    this->qt = QuadTree(r,1,1);
 
     for(int i=0; i<to; i++)
     {
@@ -80,6 +80,8 @@ VicsekQT::Step()
     //std::cout << "Chunks: " <<count << " : "<< time_ms1() - start_chunk << std::endl;
 
     this->update_pos_vel();
+
+    this->qt.clear();
 }
 
 VicsekQT::Draw(SDL_Renderer *r)

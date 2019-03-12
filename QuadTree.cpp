@@ -8,20 +8,32 @@
 
 QuadTree::~QuadTree()
 {
-    if(this->splitted)
-    {
-        delete nw;
-        delete ne;
-        delete sw;
-        delete se;
-    }
+    this->clear();
 }
 
 QuadTree::QuadTree()
 {
     this->capacity = 4;
     this->splitted = false;
-    //this->boundary = null;
+}
+
+void QuadTree::clear()
+{
+
+    if(this->splitted)
+    {
+        this->nw->clear();
+        delete this->nw;
+        this->ne->clear();
+        delete this->ne;
+        this->sw->clear();
+        delete this->sw;
+        this->se->clear();
+        delete this->se;
+
+        this->splitted = false;
+    }
+
 }
 
 QuadTree::QuadTree(Rectangle b, unsigned short cap, unsigned short mul)
@@ -29,7 +41,7 @@ QuadTree::QuadTree(Rectangle b, unsigned short cap, unsigned short mul)
     this->capacity = cap;
     this->mul = mul;
     this->splitted = false;
-    //this->p.reserve(cap);
+    this->p.reserve(cap);
     this->boundary = b;
 }
 
@@ -66,6 +78,22 @@ unsigned short QuadTree::size()
 
 
     return size;
+}
+
+unsigned short QuadTree::nodes()
+{
+    unsigned short nodes = 1;
+
+    if(this->splitted)
+    {
+        nodes += this->nw->nodes();
+        nodes += this->ne->nodes();
+        nodes += this->sw->nodes();
+        nodes += this->se->nodes();
+    }
+
+
+    return nodes;
 }
 
 bool QuadTree::query(Rectangle& r, std::vector<Particle*>& rp)
@@ -109,18 +137,12 @@ bool QuadTree::insertPoint(Particle* ip)
         return false;
     }
 
-
-    //bool free_point_found = false;
     if(this->capacity > this->p.size())
     {
-        //free_point_found = true;
         this->p.emplace_back(ip);
         return true;
-
     }
 
-    //if(!free_point_found)
-    //{
     if(!splitted)
     {
 
@@ -175,8 +197,5 @@ bool QuadTree::insertPoint(Particle* ip)
     {
         return true;
     }
-    //}
-    // else{
-    //  std::cout << "NIX GEFUNDEN" << std::endl;    }
 }
 

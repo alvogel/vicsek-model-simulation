@@ -43,7 +43,7 @@ void VicsekQTMT::Chunk(unsigned int from, unsigned int to)
     float square_dia = dia*dia;
 
     std::vector<Particle*> neighbour_points;
-    neighbour_points.reserve(5000);
+    neighbour_points.reserve(300);
     Rectangle query_r;
 
     for(int i=from; i<to; i++)
@@ -100,7 +100,7 @@ VicsekQTMT::Step()
     Rectangle r = Rectangle(this->w/2, this->h/2, this->w, this->h);
 
     int cap = 4;
-    int mul = 2;
+    int mul = 1;
 
     Rectangle r1 = Rectangle(64, 128, 128, 256);
     this->qt1 = QuadTree(r1,cap,mul);
@@ -176,6 +176,15 @@ VicsekQTMT::Step()
     this->update_pos_vel();
 
     //std::cout << "Neue Pos.: " << time_ms() - start_pos << std::endl;
+
+    this->qt1.clear();
+    this->qt2.clear();
+    this->qt3.clear();
+    this->qt4.clear();
+    this->qt5.clear();
+    this->qt6.clear();
+    this->qt7.clear();
+    this->qt8.clear();
 
 
 }

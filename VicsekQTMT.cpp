@@ -34,10 +34,6 @@ void VicsekQTMT::Tree(QuadTree& quad)
 void VicsekQTMT::Chunk(unsigned int from, unsigned int to)
 {
 
-    std::random_device rd{};
-    std::mt19937 gen{rd()};
-    std::normal_distribution<> d{0,this->eta/2};
-
     float dia = 2 * this->radius;
     float square_r = this->radius*this->radius;
     float square_dia = dia*dia;

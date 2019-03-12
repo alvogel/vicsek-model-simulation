@@ -16,11 +16,6 @@ uint64_t time_ms1()
 
 VicsekQT::Step()
 {
-
-    std::random_device rd{};
-    std::mt19937 gen{rd()};
-    std::normal_distribution<> d{0,eta/2};
-
     int from = 0;
     int to = this->p.size();
 

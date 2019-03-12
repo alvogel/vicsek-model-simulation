@@ -5,10 +5,16 @@
 #include "SDL.h"
 #include <vector>
 #include <math.h>
+#include <random>
+
+extern std::random_device rd;
+extern std::mt19937 gen;
 
 class Vicsek
 {
 private:
+
+    std::normal_distribution<float> d{0,0};
 
 public:
     unsigned short w;
@@ -21,7 +27,7 @@ public:
 
     Vicsek();
 
-    Vicsek(unsigned short width, unsigned short height, float v, float radius, unsigned int n_particles);
+    Vicsek(unsigned short width, unsigned short height, float v, float radius, float eta, unsigned int n_particles);
 
     Step();
 

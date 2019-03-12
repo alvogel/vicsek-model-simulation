@@ -8,16 +8,21 @@
 #include "Particle.h"
 #include "Vicsek.h"
 
+std::random_device rd{};
+std::mt19937 gen{rd()};
+
 Vicsek::Vicsek() {}
 
-Vicsek::Vicsek(unsigned short width, unsigned short height, float v, float radius, unsigned int n_particles)
+Vicsek::Vicsek(unsigned short width, unsigned short height, float v, float radius, float eta, unsigned int n_particles)
 {
     this->w = width;
     this->h = height;
     this->radius = radius;
-    this->eta = 10;
+    this->eta = eta;
     this->v = v;
     this->n = n_particles;
+
+    this->d = std::normal_distribution<float>(0, this->eta / 2.0);
 
     for(int i=0; i<n_particles; i++)
     {
@@ -66,8 +71,11 @@ void Vicsek::update_pos_vel()
 {
     for(int i=0; i<this->p.size(); i++)
     {
+        float noise = d(gen);
 
-        this->p[i].dir = this->p[i].new_dir;
+        //std::cout << this->eta/2 << ":"<< noise << std::endl;
+
+        this->p[i].dir = this->p[i].new_dir + noise;
 
         std::complex<float> temp = std::polar((float)1.0, this->p[i].dir);
 

@@ -13,14 +13,14 @@ const int SCREEN_WIDTH = 512;
 const int SCREEN_HEIGHT = 512;
 
 //Vicsek model constants
-const float v = 1; // Velocity v_0
-const float eta = 1; // from 0 to 2*pi
-const float radius = 5; //
-const unsigned int n = 10000; // Quantity of particles
+const float v = 0.5; // Velocity v_0
+const float eta = 0.04; // noise parameter from 0 to 2*pi
+const float radius = 20; //
+const unsigned int n = 1000; // Quantity of particles
 
 using namespace std;
 
-void Draw(SDL_Renderer *renderer, VicsekQT& quad)
+void Draw(SDL_Renderer *renderer, VicsekQTMT& quad)
 {
     while(1)
     {
@@ -44,9 +44,9 @@ int frames = 0;
 
 int main( int argc, char* args[] )
 {
-    //Vicsek sim = Vicsek(SCREEN_WIDTH, SCREEN_HEIGHT, v, radius, n); // Vicsek-Model with naive neighbour search O(n^2)
-    VicsekQT sim = VicsekQT(SCREEN_WIDTH, SCREEN_HEIGHT, v, radius, n); // Vicsek-Model using QuadTree for neighbour search O(log(n))
-    //VicsekQTMT sim = VicsekQTMT(SCREEN_WIDTH, SCREEN_HEIGHT, v, radius, n); // Vicsek-Model using QuadTree for neighbour search O(log(n)) and Multi-Threading
+    //Vicsek sim = Vicsek(SCREEN_WIDTH, SCREEN_HEIGHT, v, radius, eta, n); // Vicsek-Model with naive neighbour search O(n^2)
+    //VicsekQT sim = VicsekQT(SCREEN_WIDTH, SCREEN_HEIGHT, v, radius, eta, n); // Vicsek-Model using QuadTree for neighbour search O(log(n))
+    VicsekQTMT sim = VicsekQTMT(SCREEN_WIDTH, SCREEN_HEIGHT, v, radius, eta, n); // Vicsek-Model using QuadTree for neighbour search O(log(n)) and Multi-Threading
 
     //The window we'll be rendering to
     SDL_Window* window = NULL;

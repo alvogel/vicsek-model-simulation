@@ -18,7 +18,7 @@ public:
 
     VicsekQTMT();
 
-    VicsekQTMT(unsigned short width, unsigned short height, float v,  float radius, unsigned int n_particles) : Vicsek(width, height, v, radius, n_particles)
+    VicsekQTMT(unsigned short width, unsigned short height, float v,  float radius, float eta, unsigned int n_particles) : Vicsek(width, height, v, radius, eta, n_particles)
     {
 
     }

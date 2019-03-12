@@ -16,7 +16,7 @@ public:
 
     VicsekQT();
 
-    VicsekQT(int width, int height, float v, float radius, unsigned int n_particles) : Vicsek(width, height, v, radius, n_particles)
+    VicsekQT(int width, int height, float v, float radius, float eta, unsigned int n_particles) : Vicsek(width, height, v, radius, eta, n_particles)
     {
         this->neighbour_points.reserve(10000);
 

@@ -6,16 +6,22 @@
 
 #include "QuadTree.h"
 
+// Destructor
+
 QuadTree::~QuadTree()
 {
     this->clear();
 }
+
+// Constructor
 
 QuadTree::QuadTree()
 {
     this->capacity = 4;
     this->splitted = false;
 }
+
+// clears QuadTree and frees allocated memory
 
 void QuadTree::clear()
 {
@@ -36,6 +42,8 @@ void QuadTree::clear()
 
 }
 
+// QuadTree Constructor
+
 QuadTree::QuadTree(Rectangle b, unsigned short cap, unsigned short mul)
 {
     this->capacity = cap;
@@ -44,6 +52,8 @@ QuadTree::QuadTree(Rectangle b, unsigned short cap, unsigned short mul)
     this->p.reserve(cap);
     this->boundary = b;
 }
+
+// Draws the QuadTree nodes
 
 void QuadTree::Draw(SDL_Renderer* r)
 {
@@ -64,6 +74,8 @@ void QuadTree::Draw(SDL_Renderer* r)
 
 }
 
+// returns amount of Particles in this QuadTree
+
 unsigned short QuadTree::size()
 {
     unsigned short size = this->p.size();
@@ -80,6 +92,8 @@ unsigned short QuadTree::size()
     return size;
 }
 
+// returns amount of nodes of this QuadTree
+
 unsigned short QuadTree::nodes()
 {
     unsigned short nodes = 1;
@@ -95,6 +109,8 @@ unsigned short QuadTree::nodes()
 
     return nodes;
 }
+
+// returns the particles which are in a rectangular space
 
 bool QuadTree::query(Rectangle& r, std::vector<Particle*>& rp)
 {
@@ -128,6 +144,8 @@ bool QuadTree::query(Rectangle& r, std::vector<Particle*>& rp)
         return false;
     }
 }
+
+// inserts a Particle to this QuadTree
 
 bool QuadTree::insertPoint(Particle* ip)
 {

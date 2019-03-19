@@ -16,6 +16,8 @@ uint64_t time_ms1()
 
 VicsekQT::Step()
 {
+    this->step_count++;
+
     int from = 0;
     int to = this->p.size();
 
@@ -76,11 +78,15 @@ VicsekQT::Step()
 
     this->update_pos_vel();
 
+    // Clear QuadTree
     this->qt.clear();
 }
 
+// Draws the particles
+
 VicsekQT::Draw(SDL_Renderer *r)
 {
+    // Call super function
     Vicsek::Draw(r);
     //this->qt.Draw(r);
 

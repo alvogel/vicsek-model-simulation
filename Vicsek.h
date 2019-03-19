@@ -17,6 +17,7 @@ private:
     std::normal_distribution<float> d{0,0};
 
 public:
+    unsigned int step_count;
     unsigned short w;
     unsigned short h;
     float eta;
@@ -33,9 +34,15 @@ public:
 
     Draw(SDL_Renderer* r);
 
+    void getNeighbours(int x, int y, std::vector<Particle*> &p);
+
+    void shuffle();
+
     void update_pos_vel();
 
     float calc_avg_norm_vel();
+
+    void reset();
 
 };
 

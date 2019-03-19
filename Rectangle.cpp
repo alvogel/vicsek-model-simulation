@@ -40,6 +40,8 @@ float Rectangle::getHeight()
     return this->height;
 }
 
+// checks if a point is inside a rectangle
+
 bool Rectangle::contains(float x, float y)
 {
     float left = this->x - (this->width / 2);
@@ -52,6 +54,8 @@ bool Rectangle::contains(float x, float y)
     else
         return false;
 }
+
+// checks if two rectangles are intersecting each other
 
 bool Rectangle::intersects(Rectangle& range)
 {

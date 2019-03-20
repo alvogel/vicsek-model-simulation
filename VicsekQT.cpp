@@ -7,13 +7,6 @@
 
 #include "VicsekQT.h"
 
-uint64_t time_ms1()
-{
-    uint64_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::
-                  now().time_since_epoch()).count();
-    return ms;
-}
-
 void VicsekQT::hightlightNeighbours(int x, int y)
 {
     this->createQuadTree();

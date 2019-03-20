@@ -10,13 +10,6 @@
 
 std::mutex mu;
 
-uint64_t time_ms()
-{
-    uint64_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::
-                  now().time_since_epoch()).count();
-    return ms;
-}
-
 void VicsekQTMT::hightlightNeighbours(int x, int y)
 {
     this->createQuadTree();

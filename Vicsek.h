@@ -14,13 +14,15 @@ class Vicsek
 {
 private:
 
+    float eta;
     std::normal_distribution<float> d{0,0};
+    SDL_Surface* image;
+    SDL_Texture *texture;
 
 public:
     unsigned int step_count;
     unsigned short w;
     unsigned short h;
-    float eta;
     float v;
     float radius;
     unsigned int n;
@@ -28,11 +30,13 @@ public:
 
     Vicsek();
 
-    Vicsek(unsigned short width, unsigned short height, float v, float radius, float eta, unsigned int n_particles);
+    Vicsek(SDL_Renderer* r, unsigned short width, unsigned short height, float v, float radius, float eta, unsigned int n_particles);
 
     Step();
 
     Draw(SDL_Renderer* r);
+
+    void hightlightNeighbours(int x, int y);
 
     void getNeighbours(int x, int y, std::vector<Particle*> &p);
 
@@ -41,6 +45,10 @@ public:
     void update_pos_vel();
 
     float calc_avg_norm_vel();
+
+    void setEta(float eta);
+
+    float getEta();
 
     void reset();
 

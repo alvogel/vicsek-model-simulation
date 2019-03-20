@@ -17,86 +17,32 @@ uint64_t time_ms()
     return ms;
 }
 
-void VicsekQTMT::Tree(QuadTree& quad)
+void VicsekQTMT::hightlightNeighbours(int x, int y)
 {
-    for(int i=0; i < this->n; i++)
+    this->createQuadTree();
+
+    std::vector<Particle*> neighbours;
+    this->getNeighbours(x, y, neighbours);
+
+    for(int n_np=0; n_np < neighbours.size(); n_np++)
     {
-        if(!this->p[i].processed)
-        {
-            if(quad.insertPoint(&(this->p[i])))
-            {
-                this->p[i].processed = true;
-            }
-        }
-    }
-}
-
-void VicsekQTMT::Chunk(unsigned int from, unsigned int to)
-{
-
-    float dia = 2 * this->radius;
-    float square_r = this->radius*this->radius;
-    float square_dia = dia*dia;
-
-    std::vector<Particle*> neighbour_points;
-    //neighbour_points.reserve(300);
-    Rectangle query_r;
-
-    for(int i=from; i<to; i++)
-    {
-
-        neighbour_points.clear();
-
-        query_r.x = this->p[i].x;
-        query_r.y = this->p[i].y;
-        query_r.setWidth(dia);
-        query_r.setHeight(dia);
-
-        this->qt1.query(query_r, neighbour_points);
-        this->qt2.query(query_r, neighbour_points);
-        this->qt3.query(query_r, neighbour_points);
-        this->qt4.query(query_r, neighbour_points);
-        this->qt5.query(query_r, neighbour_points);
-        this->qt6.query(query_r, neighbour_points);
-        this->qt7.query(query_r, neighbour_points);
-        this->qt8.query(query_r, neighbour_points);
-
-        float sum_vx = 0;
-        float sum_vy = 0;
-
-        int size = neighbour_points.size();
-
-        for(int j = 0; j<size; j++)
-        {
-            float distance = pow(this->p[i].x - neighbour_points[j]->x, 2) + pow(this->p[i].y - neighbour_points[j]->y, 2);
-
-            if(distance < square_r)
-            {
-
-                std::complex<float> temp = std::polar((float)1.0, neighbour_points[j]->dir);
-
-                sum_vx += temp.real();
-                sum_vy += temp.imag();
-
-            }
-        }
-
-        std::complex<float> temp_new_v (sum_vx, sum_vy);
-
-        this->p[i].new_dir = std::arg(temp_new_v);
-
+        neighbours[n_np]->color_r = 255;
+        neighbours[n_np]->color_g = 0;
+        neighbours[n_np]->color_b = 0;
     }
 
+    this->qt1.clear();
+    this->qt2.clear();
+    this->qt3.clear();
+    this->qt4.clear();
+    this->qt5.clear();
+    this->qt6.clear();
+    this->qt7.clear();
+    this->qt8.clear();
 }
 
-VicsekQTMT::Step()
+void VicsekQTMT::createQuadTree()
 {
-    this->step_count++;
-
-    int step = this->n/8;
-
-    uint64_t start_tree = time_ms();
-
     for(int i=0; i<this->n; i++)
     {
         this->p[i].processed = false;
@@ -120,11 +66,172 @@ VicsekQTMT::Step()
     t77.join();
     t88.join();
 
-    //std::cout << "Quadsize: " << this->qt.size() << std::endl;
+}
 
-    //std::cout << "Baumerstellung: " << time_ms() - start_tree << std::endl;
+void VicsekQTMT::Tree(QuadTree& quad)
+{
+    for(int i=0; i < this->n; i++)
+    {
+        if(!this->p[i].processed)
+        {
+            if(quad.insertPoint(&(this->p[i])))
+            {
+                this->p[i].processed = true;
+            }
+        }
+    }
+}
 
-    uint64_t start_chunk = time_ms();
+void VicsekQTMT::Chunk(unsigned int from, unsigned int to)
+{
+
+    float dia = 2 * this->radius;
+    float square_r = this->radius*this->radius;
+    float square_dia = dia*dia;
+
+    //std::vector<Particle*> neighbour_points;
+    //Rectangle query_r;
+
+    for(int i=from; i<to; i++)
+    {
+        float sum_vx = 0;
+        float sum_vy = 0;
+
+        std::vector<Particle*> np;
+        this->getNeighbours(this->p[i].x, this->p[i].y, np);
+
+        for(int j=0; j < np.size(); j++)
+        {
+            std::complex<float> temp = std::polar((float)1.0, np[j]->dir);
+
+            sum_vx += temp.real();
+            sum_vy += temp.imag();
+
+        }
+
+        std::complex<float> temp_new_v (sum_vx, sum_vy);
+
+        this->p[i].new_dir = std::arg(temp_new_v);
+
+    }
+}
+
+void VicsekQTMT::getNeighbours(int x, int y, std::vector<Particle*> &np)
+{
+    if(x >= 0 && x <= this->w && y >= 0 && y <= this->h)
+    {
+        std::vector<Particle*> qt_np;
+
+        float dia = 2 * this->radius;
+        float square_r = this->radius * this->radius;
+        float square_dia = dia * dia;
+
+        Rectangle query_r;
+
+        query_r.x = x;
+        query_r.y = y;
+        query_r.setWidth(dia);
+        query_r.setHeight(dia);
+
+        this->qt1.query(query_r, qt_np);
+        this->qt2.query(query_r, qt_np);
+        this->qt3.query(query_r, qt_np);
+        this->qt4.query(query_r, qt_np);
+        this->qt5.query(query_r, qt_np);
+        this->qt6.query(query_r, qt_np);
+        this->qt7.query(query_r, qt_np);
+        this->qt8.query(query_r, qt_np);
+
+        query_r.x = x + this->w;
+        query_r.y = y;
+        query_r.setWidth(dia);
+        query_r.setHeight(dia);
+
+        this->qt1.query(query_r, qt_np);
+        this->qt2.query(query_r, qt_np);
+        this->qt3.query(query_r, qt_np);
+        this->qt4.query(query_r, qt_np);
+        this->qt5.query(query_r, qt_np);
+        this->qt6.query(query_r, qt_np);
+        this->qt7.query(query_r, qt_np);
+        this->qt8.query(query_r, qt_np);
+
+        query_r.x = x - this->w;
+        query_r.y = y;
+        query_r.setWidth(dia);
+        query_r.setHeight(dia);
+
+        this->qt1.query(query_r, qt_np);
+        this->qt2.query(query_r, qt_np);
+        this->qt3.query(query_r, qt_np);
+        this->qt4.query(query_r, qt_np);
+        this->qt5.query(query_r, qt_np);
+        this->qt6.query(query_r, qt_np);
+        this->qt7.query(query_r, qt_np);
+        this->qt8.query(query_r, qt_np);
+
+        query_r.x = x;
+        query_r.y = y + this->h;
+        query_r.setWidth(dia);
+        query_r.setHeight(dia);
+
+        this->qt1.query(query_r, qt_np);
+        this->qt2.query(query_r, qt_np);
+        this->qt3.query(query_r, qt_np);
+        this->qt4.query(query_r, qt_np);
+        this->qt5.query(query_r, qt_np);
+        this->qt6.query(query_r, qt_np);
+        this->qt7.query(query_r, qt_np);
+        this->qt8.query(query_r, qt_np);
+
+        query_r.x = x;
+        query_r.y = y - this->h;
+        query_r.setWidth(dia);
+        query_r.setHeight(dia);
+
+        this->qt1.query(query_r, qt_np);
+        this->qt2.query(query_r, qt_np);
+        this->qt3.query(query_r, qt_np);
+        this->qt4.query(query_r, qt_np);
+        this->qt5.query(query_r, qt_np);
+        this->qt6.query(query_r, qt_np);
+        this->qt7.query(query_r, qt_np);
+        this->qt8.query(query_r, qt_np);
+
+        float sum_vx = 0;
+        float sum_vy = 0;
+
+        int size = qt_np.size();
+
+        for(int j = 0; j < size; j++)
+        {
+            float distance_center   = pow(x - qt_np[j]->x, 2)              + pow(y - qt_np[j]->y, 2);
+            float distance_east     = pow(x - (qt_np[j]->x + this->w), 2)  + pow(y - qt_np[j]->y, 2);
+            float distance_north    = pow(x - qt_np[j]->x, 2)              + pow(y - (qt_np[j]->y - this->h), 2);
+            float distance_west     = pow(x - (qt_np[j]->x - this->w), 2)  + pow(y - qt_np[j]->y, 2);
+            float distance_south    = pow(x - qt_np[j]->x, 2)              + pow(y - (qt_np[j]->y + this->h), 2);
+
+            if(     distance_center < square_r ||
+                    distance_east < square_r ||
+                    distance_north < square_r ||
+                    distance_west < square_r ||
+                    distance_south < square_r
+              )
+            {
+                np.push_back(qt_np[j]);
+            }
+        }
+    }
+}
+
+VicsekQTMT::Step()
+{
+    // create QuadTree
+    this->createQuadTree();
+
+    this->step_count++;
+
+    int step = this->n/8;
 
     std::thread t1(&VicsekQTMT::Chunk, this, 0, step);
     std::thread t2(&VicsekQTMT::Chunk, this, step, 2*step);
@@ -144,14 +251,7 @@ VicsekQTMT::Step()
     t7.join();
     t8.join();
 
-
-    //std::cout << "Chunks: " << time_ms() - start_chunk << std::endl;
-
-    uint64_t start_pos = time_ms();
-
     this->update_pos_vel();
-
-    //std::cout << "Neue Pos.: " << time_ms() - start_pos << std::endl;
 
     this->qt1.clear();
     this->qt2.clear();
@@ -161,7 +261,6 @@ VicsekQTMT::Step()
     this->qt6.clear();
     this->qt7.clear();
     this->qt8.clear();
-
 
 }
 

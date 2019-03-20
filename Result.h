@@ -11,9 +11,11 @@ class Result
 
 private:
 
-    std::list<ResultEntry> data;
+
 
 public:
+
+    std::list<ResultEntry> data;
 
     ~Result();
 
@@ -21,7 +23,7 @@ public:
 
     Result(std::string file_name);
 
-    void addEntry(unsigned int n_i, unsigned int n_p, float anv, float v, float eta, float radius);
+    void addEntry(unsigned int w, unsigned int h, float rho, unsigned int n_i, unsigned int n_p, float anv, float v, float eta, float radius);
 
     bool isStable();
 

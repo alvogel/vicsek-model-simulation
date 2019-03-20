@@ -18,7 +18,7 @@ public:
 
     VicsekQTMT();
 
-    VicsekQTMT(unsigned short width, unsigned short height, float v,  float radius, float eta, unsigned int n_particles) : Vicsek(width, height, v, radius, eta, n_particles)
+    VicsekQTMT(SDL_Renderer* r, unsigned short width, unsigned short height, float v,  float radius, float eta, unsigned int n_particles) : Vicsek(r, width, height, v, radius, eta, n_particles)
     {
         int cap = 4;
         int mul = 1;
@@ -41,11 +41,15 @@ public:
         this->qt8 = QuadTree(r8,cap,mul);
     }
 
-    Start();
+    void createQuadTree();
 
     void Tree(QuadTree& quad);
 
     void Chunk(unsigned int from, unsigned int to);
+
+    void hightlightNeighbours(int x, int y);
+
+    void getNeighbours(int x, int y, std::vector<Particle*> &np);
 
     Step();
 

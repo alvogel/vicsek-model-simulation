@@ -3,6 +3,9 @@
 
 struct ResultEntry{
 
+    unsigned int world_width;   // World size in x
+    unsigned int world_height;  // World size in y
+    float density;     // Density (n / (width * height))
     unsigned int n_iterations;  // Number of iteration steps of the simulation
     unsigned int n_particles;   // Number of particles
     float avg_norm_vel;         // Average normalized velocity

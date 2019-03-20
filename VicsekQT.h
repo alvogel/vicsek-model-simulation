@@ -4,6 +4,9 @@
 #include "Vicsek.h"
 #include "QuadTree.h"
 
+#include "SDL.h"
+#include <SDL_image.h>
+
 class VicsekQT : public Vicsek
 {
 private:
@@ -12,15 +15,15 @@ private:
 public:
     QuadTree qt;
 
-    std::vector<Particle*> neighbour_points;
-
     VicsekQT();
 
-    VicsekQT(int width, int height, float v, float radius, float eta, unsigned int n_particles) : Vicsek(width, height, v, radius, eta, n_particles)
-    {
-        this->neighbour_points.reserve(10000);
+    VicsekQT(SDL_Renderer* r, int width, int height, float v, float radius, float eta, unsigned int n_particles) : Vicsek(r, width, height, v, radius, eta, n_particles){}
 
-    }
+    void createQuadTree();
+
+    void hightlightNeighbours(int x, int y);
+
+    void getNeighbours(int x, int y, std::vector<Particle*> &np);
 
     Step();
 

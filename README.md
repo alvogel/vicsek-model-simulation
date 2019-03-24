@@ -1,5 +1,7 @@
 <b>Vicsek Model written in C++</b>
 
+<img src="/blob/master/preview.png">
+
 <b>Dependencies:</b>
 
 - <a href="https://www.libsdl.org/download-2.0.php">SDL2</a>

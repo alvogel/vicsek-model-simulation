@@ -1,6 +1,6 @@
 <b>Vicsek Model written in C++</b>
 
-<img src="/blob/master/preview.png">
+<img src="https://github.com/alvogel/vicsek-model-simulation/blob/master/preview.png">
 
 <b>Dependencies:</b>
 

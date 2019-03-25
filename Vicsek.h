@@ -36,7 +36,7 @@ public:
 
     Draw(SDL_Renderer* r);
 
-    void hightlightNeighbours(int x, int y);
+    void highlightNeighbours(int x, int y);
 
     void getNeighbours(int x, int y, std::vector<Particle*> &p);
 
@@ -47,6 +47,8 @@ public:
     float calc_avg_norm_vel();
 
     void setEta(float eta);
+
+    void setParticleCount(unsigned int n);
 
     float getEta();
 

@@ -21,7 +21,7 @@ void Result::saveToFile()
 
     file.open("result.dat");
 
-    file << "#"  << "\t" << "WIDTH"  << "\t" << "HEIGHT"  << "\t" << "density"  << "\t" << "#simulation steps"  << "\t" << "particle count" << "\t" << "average normalized velocity" << "\t" << "velocity" << "\t" << "eta" << "\t" << "radius" <<"\n";
+    file << "#"  << "\t" << "CPD"  << "\t" << "WIDTH"  << "\t" << "HEIGHT"  << "\t" << "density"  << "\t" << "#simulation steps"  << "\t" << "particle count" << "\t" << "average normalized velocity" << "\t" << "velocity" << "\t" << "eta" << "\t" << "radius" <<"\n";
 
     std::list<ResultEntry>::iterator iter_data;
 
@@ -30,6 +30,7 @@ void Result::saveToFile()
     for(iter_data = this->data.begin(); iter_data != this->data.end(); iter_data++)
     {
         file    << count++ << "\t";
+        file    << std::fixed << std::setprecision(7) << iter_data->cps << "\t";
         file    << std::fixed << std::setprecision(0) << iter_data->world_width << "\t";
         file    << std::fixed << std::setprecision(0) << iter_data->world_height << "\t";
         file    << std::fixed << std::setprecision(7) << (float)iter_data->density << "\t";
@@ -45,10 +46,11 @@ void Result::saveToFile()
 
 }
 
-void Result::addEntry(unsigned int w, unsigned int h, float rho, unsigned int n_i, unsigned int n_p, float anv, float v, float eta, float radius)
+void Result::addEntry(float cps, unsigned int w, unsigned int h, float rho, unsigned int n_i, unsigned int n_p, float anv, float v, float eta, float radius)
 {
 
     ResultEntry d;
+    d.cps = cps;
     d.world_width = w;
     d.world_height = h;
     d.density = rho;
@@ -67,6 +69,7 @@ ResultEntry Result::getAvgLastN(int last_n)
 {
     ResultEntry d;
 
+    d.cps = 0;
     d.world_width = 0;
     d.world_height = 0;
     d.density = 0;
@@ -89,6 +92,7 @@ ResultEntry Result::getAvgLastN(int last_n)
     {
         iter_data--;
 
+        d.cps += iter_data->cps;
         d.world_width = iter_data->world_width;
         d.world_height = iter_data->world_height;
         d.density = iter_data->density;
@@ -102,6 +106,7 @@ ResultEntry Result::getAvgLastN(int last_n)
 
     /*d.n_iterations = iter_data->n_iterations;
     d.n_particles = iter_data->n_particles;*/
+    d.cps /= last_n;
     d.avg_norm_vel /= last_n;
 
     /*d.v = iter_data->v;

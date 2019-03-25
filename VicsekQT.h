@@ -13,11 +13,18 @@ private:
 
 
 public:
+    std::vector<Particle*> np;
+    std::vector<Particle*> qt_np;
+
     QuadTree qt;
 
     VicsekQT();
 
-    VicsekQT(SDL_Renderer* r, int width, int height, float v, float radius, float eta, unsigned int n_particles) : Vicsek(r, width, height, v, radius, eta, n_particles){}
+    VicsekQT(SDL_Renderer* r, int width, int height, float v, float radius, float eta, unsigned int n_particles) : Vicsek(r, width, height, v, radius, eta, n_particles)
+    {
+        this->qt_np.reserve(this->n);
+        this->np.reserve(this->n);
+    }
 
     void createQuadTree();
 

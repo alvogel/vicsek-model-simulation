@@ -14,8 +14,6 @@ public:
     //QuadTree qt;
     QuadTree qt1,qt2,qt3,qt4,qt5,qt6,qt7,qt8;
 
-    //std::vector<Particle> p_temp;
-
     VicsekQTMT();
 
     VicsekQTMT(SDL_Renderer* r, unsigned short width, unsigned short height, float v,  float radius, float eta, unsigned int n_particles) : Vicsek(r, width, height, v, radius, eta, n_particles)

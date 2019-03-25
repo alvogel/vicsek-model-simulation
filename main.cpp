@@ -6,6 +6,7 @@
 #include <sstream>
 #include <iomanip>
 #include <mutex>
+#include <cstddef>
 
 #include <SDL.h>
 #include "SDL_ttf.h"
@@ -47,18 +48,19 @@ bool highlight_mouse_neighbours = false;
 
 std::mutex mm;
 
-int start_time = millis();
-int frames = 0;
+unsigned long long start_time = micros();
+unsigned int frames = 0;
 
 int main( int argc, char* args[] )
 {
     // Parameter START / END / NUMBER OF STEPS
-    v =         Parameter(1,    0.1,  0);
-    eta =       Parameter(0.0,    2*M_PI,  20);
-    radius =    Parameter(50,    10, 0);
-    n =         Parameter(500, 0,  0);
+    v =         Parameter(2,    0.1,    0);
+    eta =       Parameter(0.4,  2*M_PI, 10);
+    radius =    Parameter(20,   10,     0);
+    n =         Parameter(10000,  500,      0); // MAX 65536
 
-    int max_iterations = 500;
+    int max_iterations = 1000000;
+    int avg_count = 100;
 
     //The window we'll be rendering to
     SDL_Window* window = NULL;
@@ -96,120 +98,138 @@ int main( int argc, char* args[] )
 
             renderer = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
-            //Vicsek sim = Vicsek(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, v, radius, eta, n); // Vicsek-Model with naive neighbour search O(n^2)
-            //VicsekQT sim = VicsekQT(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, v.begin, radius.begin, eta.begin, (int)n.begin); // Vicsek-Model using QuadTree for neighbour search O(log(n))
+            //Vicsek sim = Vicsek(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, v.getStart(), radius.getStart(), eta.getStart(), (int)n.getStart()); // Vicsek-Model with naive neighbour search O(n^2)
+            //VicsekQT sim = VicsekQT(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, v.getStart(), radius.getStart(), eta.getStart(), (int)n.getStart()); // Vicsek-Model using QuadTree for neighbour search O(log(n))
             VicsekQTMT sim = VicsekQTMT(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, v.getStart(), radius.getStart(), eta.getStart(), (int)n.getStart()); // Vicsek-Model using QuadTree for neighbour search O(log(n)) and Multi-Threading
-
-            std::cout << "v: " << v.getCurrent() << std::endl;
-            std::cout << "eta: " << eta.getCurrent() << std::endl;
-            std::cout << "radius: " << radius.getCurrent() << std::endl;
-            std::cout << "n: " << n.getCurrent() << std::endl;
+            //VicsekOCL sim = VicsekOCL(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, v.getStart(), radius.getStart(), eta.getStart(), (int)n.getStart());
 
             std::thread t1(Draw, renderer, std::ref(sim));
 
-            eta.reset();
+            n.reset();
             while(true)
             {
-                sim.setEta(eta.getCurrent());
+                mm.lock();
+                //sim.setParticleCount((int)n.getCurrent());
+                mm.unlock();
 
-                radius.reset();
+                eta.reset();
                 while(true)
                 {
-                    sim.radius = radius.getCurrent();
+                    sim.setEta(eta.getCurrent());
 
-                    while(sim.step_count < max_iterations)
+                    radius.reset();
+                    while(true)
                     {
-                        SDL_Event event;
+                        sim.radius = radius.getCurrent();
 
-                        while (SDL_PollEvent(&event))
+                        while(sim.step_count < max_iterations)
                         {
-                            SDL_GetMouseState(&mouse_x, &mouse_y);
+                            SDL_Event event;
 
-                            if (event.type == SDL_KEYDOWN)
+                            while (SDL_PollEvent(&event))
                             {
-                                switch(event.key.keysym.sym)
-                                {
-                                case SDLK_h:
-                                    if(highlight_mouse_neighbours)
-                                    {
-                                        highlight_mouse_neighbours = false;
-                                    }
 
-                                    else
+
+                                SDL_GetMouseState(&mouse_x, &mouse_y);
+
+                                if (event.type == SDL_KEYDOWN)
+                                {
+                                    switch(event.key.keysym.sym)
                                     {
-                                        highlight_mouse_neighbours = true;
+                                    case SDLK_h:
+                                        if(highlight_mouse_neighbours)
+                                        {
+                                            highlight_mouse_neighbours = false;
+                                        }
+
+                                        else
+                                        {
+                                            highlight_mouse_neighbours = true;
+                                        }
+                                        break;
+                                    default:
+                                        break;
                                     }
-                                    break;
-                                default:
-                                    break;
                                 }
                             }
+
+                            if(highlight_mouse_neighbours)
+                            {
+                                mm.lock();
+                            }
+                            sim.Step();
+
+                            if(highlight_mouse_neighbours)
+                            {
+                                sim.highlightNeighbours(mouse_x, mouse_y);
+                            }
+
+                            if(highlight_mouse_neighbours)
+                            {
+                                mm.unlock();
+                            }
+
+                            res.addEntry(CPS,
+                                         SCREEN_WIDTH,
+                                         SCREEN_HEIGHT,
+                                         n.getCurrent() / (SCREEN_WIDTH * SCREEN_HEIGHT),
+                                         sim.step_count,
+                                         n.getCurrent(),
+                                         sim.calc_avg_norm_vel(),
+                                         v.getCurrent(),
+                                         sim.getEta(),
+                                         radius.getCurrent());
+
+                            frames++;
+                            unsigned long long runtime = micros() - start_time;
+                            if(runtime > 1000000)
+                            {
+                                CPS = frames / (runtime/1000000.0);
+                                frames = 0;
+                                start_time = micros();
+                            }
+
+
+
                         }
 
-                        if(highlight_mouse_neighbours)
+                        ResultEntry avg = res.getAvgLastN(avg_count);
+                        res_avg.addEntry(avg.cps,
+                                         avg.world_width,
+                                         avg.world_height,
+                                         avg.density,
+                                         res.data.size(),
+                                         avg.n_particles,
+                                         avg.avg_norm_vel,
+                                         avg.v,
+                                         avg.eta,
+                                         avg.radius);
+
+                        res.clear();
+                        sim.reset();
+
+                        radius.next();
+
+                        if(radius.isFinished())
                         {
-                            mm.lock();
-                        }
-                        sim.Step();
-
-                        if(highlight_mouse_neighbours)
-                        {
-                            sim.hightlightNeighbours(mouse_x, mouse_y);
-                        }
-
-                        if(highlight_mouse_neighbours)
-                        {
-                            mm.unlock();
-                        }
-
-                        res.addEntry(SCREEN_WIDTH,
-                                     SCREEN_HEIGHT,
-                                     n.getCurrent() / (SCREEN_WIDTH * SCREEN_HEIGHT),
-                                     sim.step_count,
-                                     n.getCurrent(),
-                                     sim.calc_avg_norm_vel(),
-                                     v.getCurrent(),
-                                     sim.getEta(),
-                                     radius.getCurrent());
-
-                        frames++;
-                        int runtime = millis() - start_time;
-
-                        if(runtime >= 100)
-                        {
-                            CPS = (frames / (float(runtime)/1000));
-                            frames = 0;
-                            start_time = millis();
+                            break;
                         }
                     }
 
-                    ResultEntry avg = res.getAvgLastN(100);
-                    res_avg.addEntry(avg.world_width,
-                                     avg.world_height,
-                                     avg.density,
-                                     res.data.size(),
-                                     avg.n_particles,
-                                     avg.avg_norm_vel,
-                                     avg.v,
-                                     avg.eta,
-                                     avg.radius);
+                    eta.next();
 
-                    res.clear();
-                    sim.reset();
-
-                    radius.next();
-
-                    if(radius.isFinished())
+                    if(eta.isFinished())
                     {
                         break;
                     }
                 }
-                eta.next();
+                n.next();
 
-                if(eta.isFinished())
+                if(n.isFinished())
                 {
                     break;
                 }
+
             }
 
             // Save simulation result to file

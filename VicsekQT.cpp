@@ -16,9 +16,7 @@ void VicsekQT::hightlightNeighbours(int x, int y)
 
     for(int n_np=0; n_np < neighbours.size(); n_np++)
     {
-        neighbours[n_np]->color_r = 255;
-        neighbours[n_np]->color_g = 0;
-        neighbours[n_np]->color_b = 0;
+        neighbours[n_np]->highlighted = true;
     }
 
     this->qt.clear();
@@ -40,7 +38,7 @@ void VicsekQT::getNeighbours(int x, int y, std::vector<Particle*> &np)
 {
     if(x >= 0 && x <= this->w && y >= 0 && y <= this->h)
     {
-        std::vector<Particle*> qt_np;
+        this->qt_np.clear();
 
         float dia = 2 * this->radius;
         float square_r = this->radius * this->radius;
@@ -53,48 +51,74 @@ void VicsekQT::getNeighbours(int x, int y, std::vector<Particle*> &np)
         query_r.setWidth(dia);
         query_r.setHeight(dia);
 
-        this->qt.query(query_r, qt_np);
+        this->qt.query(query_r, this->qt_np);
 
         query_r.x = x + this->w;
         query_r.y = y;
         query_r.setWidth(dia);
         query_r.setHeight(dia);
 
-        this->qt.query(query_r, qt_np);
+        this->qt.query(query_r, this->qt_np);
 
         query_r.x = x - this->w;
         query_r.y = y;
         query_r.setWidth(dia);
         query_r.setHeight(dia);
 
-        this->qt.query(query_r, qt_np);
+        this->qt.query(query_r, this->qt_np);
 
         query_r.x = x;
         query_r.y = y + this->h;
         query_r.setWidth(dia);
         query_r.setHeight(dia);
 
-        this->qt.query(query_r, qt_np);
+        this->qt.query(query_r, this->qt_np);
 
         query_r.x = x;
         query_r.y = y - this->h;
         query_r.setWidth(dia);
         query_r.setHeight(dia);
 
-        this->qt.query(query_r, qt_np);
+        this->qt.query(query_r, this->qt_np);
 
         float sum_vx = 0;
         float sum_vy = 0;
 
-        int size = qt_np.size();
+        int size = this->qt_np.size();
 
         for(int j = 0; j < size; j++)
         {
-            float distance_center   = pow(x - qt_np[j]->x, 2)              + pow(y - qt_np[j]->y, 2);
-            float distance_east     = pow(x - (qt_np[j]->x + this->w), 2)  + pow(y - qt_np[j]->y, 2);
-            float distance_north    = pow(x - qt_np[j]->x, 2)              + pow(y - (qt_np[j]->y - this->h), 2);
-            float distance_west     = pow(x - (qt_np[j]->x - this->w), 2)  + pow(y - qt_np[j]->y, 2);
-            float distance_south    = pow(x - qt_np[j]->x, 2)              + pow(y - (qt_np[j]->y + this->h), 2);
+            float distance_center;
+            float distance_east;
+            float distance_north;
+            float distance_west;
+            float distance_south;
+
+            float dx_c,dy_c;
+            float dx_cs,dy_cs;
+            float dx_e;
+            float dy_n;
+            float dx_w;
+            float dy_s;
+
+            dx_c = x - this->qt_np[j]->x;
+            dx_cs = dx_c * dx_c;
+            dy_c = y - this->qt_np[j]->y;
+            dy_cs = dy_c * dy_c;
+            distance_center = dx_cs + dy_cs;
+
+            dx_e = dx_c + this->w;
+            distance_east   = (dx_e * dx_e) + dy_cs;
+
+            dy_n = dy_c - this->h;
+            distance_north  = dx_cs + (dy_n * dy_n);
+
+            dx_w = dx_c - this->w;
+            distance_west   = (dx_w * dx_w) + dy_cs;
+
+            dy_s = dy_c + this->h;
+            distance_south  = dx_cs + (dy_s * dy_s);
+
 
             if(     distance_center < square_r ||
                     distance_east < square_r ||
@@ -103,7 +127,7 @@ void VicsekQT::getNeighbours(int x, int y, std::vector<Particle*> &np)
                     distance_south < square_r
               )
             {
-                np.push_back(qt_np[j]);
+                this->np.push_back(this->qt_np[j]);
             }
         }
     }
@@ -121,12 +145,13 @@ VicsekQT::Step()
         float sum_vx = 0;
         float sum_vy = 0;
 
-        std::vector<Particle*> np;
-        this->getNeighbours(this->p[i].x, this->p[i].y, np);
+        //std::vector<Particle*> np;
+        this->np.clear();
+        this->getNeighbours(this->p[i].x, this->p[i].y, this->np);
 
         for(int j=0; j < np.size(); j++)
         {
-            std::complex<float> temp = std::polar((float)1.0, np[j]->dir);
+            std::complex<float> temp = std::polar((float)1.0, this->np[j]->dir);
 
             sum_vx += temp.real();
             sum_vy += temp.imag();

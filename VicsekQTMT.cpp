@@ -19,9 +19,7 @@ void VicsekQTMT::hightlightNeighbours(int x, int y)
 
     for(int n_np=0; n_np < neighbours.size(); n_np++)
     {
-        neighbours[n_np]->color_r = 255;
-        neighbours[n_np]->color_g = 0;
-        neighbours[n_np]->color_b = 0;
+        neighbours[n_np]->highlighted = true;
     }
 
     this->qt1.clear();
@@ -198,11 +196,36 @@ void VicsekQTMT::getNeighbours(int x, int y, std::vector<Particle*> &np)
 
         for(int j = 0; j < size; j++)
         {
-            float distance_center   = pow(x - qt_np[j]->x, 2)              + pow(y - qt_np[j]->y, 2);
-            float distance_east     = pow(x - (qt_np[j]->x + this->w), 2)  + pow(y - qt_np[j]->y, 2);
-            float distance_north    = pow(x - qt_np[j]->x, 2)              + pow(y - (qt_np[j]->y - this->h), 2);
-            float distance_west     = pow(x - (qt_np[j]->x - this->w), 2)  + pow(y - qt_np[j]->y, 2);
-            float distance_south    = pow(x - qt_np[j]->x, 2)              + pow(y - (qt_np[j]->y + this->h), 2);
+            float distance_center;
+            float distance_east;
+            float distance_north;
+            float distance_west;
+            float distance_south;
+
+            float dx_c,dy_c;
+            float dx_cs,dy_cs;
+            float dx_e;
+            float dy_n;
+            float dx_w;
+            float dy_s;
+
+            dx_c = x - qt_np[j]->x;
+            dx_cs = dx_c * dx_c;
+            dy_c = y - qt_np[j]->y;
+            dy_cs = dy_c * dy_c;
+            distance_center = dx_cs + dy_cs;
+
+            dx_e = dx_c + this->w;
+            distance_east   = (dx_e * dx_e) + dy_cs;
+
+            dy_n = dy_c - this->h;
+            distance_north  = dx_cs + (dy_n * dy_n);
+
+            dx_w = dx_c - this->w;
+            distance_west   = (dx_w * dx_w) + dy_cs;
+
+            dy_s = dy_c + this->h;
+            distance_south  = dx_cs + (dy_s * dy_s);
 
             if(     distance_center < square_r ||
                     distance_east < square_r ||

@@ -4,6 +4,7 @@
 #include <mutex>
 #include <sstream>
 #include <iomanip>
+#include <cstddef>
 
 #include <SDL.h>
 #include "SDL_ttf.h"
@@ -40,20 +41,19 @@ extern const int SCREEN_HEIGHT;
 extern TTF_Font* font;
 extern std::mutex mm;
 
-void Draw(SDL_Renderer *renderer, VicsekQTMT& quad)
+void Draw(SDL_Renderer *renderer, Vicsek& quad)
 {
     int frames = 0;
-    long long start_time = millis();
+    long long start_time = micros();
 
     while(1)
     {
+        mm.lock();
 
         SDL_SetRenderDrawColor( renderer, 0x0, 0x0, 0x0, 0x0 );
         SDL_RenderClear( renderer );
 
-        mm.lock();
         quad.Draw(renderer);
-        mm.unlock();
 
         SDL_Rect rect;
         rect.x = SCREEN_WIDTH;
@@ -75,7 +75,7 @@ void Draw(SDL_Renderer *renderer, VicsekQTMT& quad)
         Draw_Text(renderer, SCREEN_WIDTH+20, 10+(1*font_size), ss);
 
         std::stringstream s1;
-        s1 << std::fixed << std::setprecision(3) << "eta: "<< quad.getEta() << " / " << eta.getEnd();
+        s1 << std::fixed << std::setprecision(3) << "Noise: "<< quad.getEta() << " / " << eta.getEnd();
         ss = s1.str();
         Draw_Text(renderer, SCREEN_WIDTH+20, 10+2*font_size, ss);
 
@@ -135,19 +135,81 @@ void Draw(SDL_Renderer *renderer, VicsekQTMT& quad)
 
         SDL_SetRenderDrawColor( renderer, 0xFF, 0xFF, 0xFF, 0xFF );
         SDL_RenderDrawLine(renderer, SCREEN_WIDTH, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        SDL_RenderDrawLine(renderer, SCREEN_WIDTH, SCREEN_HEIGHT/2, SCREEN_WIDTH+250, SCREEN_HEIGHT/2);
+
+
+        //int circumference = 2 * 110 * M_PI;
+        int boxes = 2 * 110 * M_PI;
+        std::vector<int> histogram(boxes, 0);
+
+        for(int i=0; i<quad.p.size(); i++)
+        {
+            int box = (int)floor((quad.p[i].dir/(2.0*M_PI)) * boxes);
+
+            //if(box >= 0 && box <= boxes)
+            histogram[box%boxes]++;
+        }
+
+
+        int center_hist_x = 637;
+        int center_hist_y = 387;
+
+
+        for(int i=1; i < histogram.size()-1; i++)
+        {
+            histogram[i] = (histogram[i-1] + histogram[i] + histogram[i+1]) / 3;
+        }
+
+        int max = 0;
+
+        for(int i=0; i < histogram.size(); i++)
+        {
+            if(histogram[i] > max)
+            {
+                max = histogram[i];
+            }
+        }
+
+        for(int i=0; i < histogram.size(); i++)
+        {
+
+            unsigned short r,g,b;
+            HSV_TO_RGB((i/110.0 / (2*M_PI)) * 360.0, 1.0, 0.4, r, g, b);
+            SDL_SetRenderDrawColor(renderer, r, g, b, 0);
+
+            float n_x = cos(i/110.0);
+            float n_y = sin(i/110.0);
+
+            float m = 60.0;
+            int hx1 = (80.0-(m/2.0)) * n_x + center_hist_x;
+            int hy1 = (80.0-(m/2.0)) * n_y + center_hist_y ;
+            int hx2 = (80.0+(m/2.0)) * n_x + center_hist_x;
+            int hy2 = (80.0+(m/2.0)) * n_y + center_hist_y;
+            SDL_RenderDrawLine(renderer, hx1, hy1, hx2, hy2);
+
+            HSV_TO_RGB((i/110.0 / (2*M_PI)) * 360.0, 1.0, 1.0, r, g, b);
+            SDL_SetRenderDrawColor(renderer, r, g, b, 0);
+
+            m = 60.0 * (float)((float)histogram[i] / (float)max);
+            hx1 = (80.0-(m/2.0)) * n_x + center_hist_x;
+            hy1 = (80.0-(m/2.0)) * n_y + center_hist_y ;
+            hx2 = (80.0+(m/2.0)) * n_x + center_hist_x;
+            hy2 = (80.0+(m/2.0)) * n_y + center_hist_y;
+            SDL_RenderDrawLine(renderer, hx1, hy1, hx2, hy2);
+        }
 
         SDL_RenderPresent( renderer );
 
         frames++;
-        int runtime = millis() - start_time;
+        int runtime = micros() - start_time;
 
-        if(runtime >= 100)
+        if(runtime >= 1000000)
         {
-            FPS = (frames / (float(runtime)/1000));
+            FPS = (frames / (float(runtime)/1000000));
             frames = 0;
-            start_time = millis();
+            start_time = micros();
         }
-
+        mm.unlock();
     }
 
 
@@ -182,6 +244,13 @@ void Draw_Text(SDL_Renderer *r, int x, int y, std::string s)
 uint64_t millis()
 {
     uint64_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::
+                  now().time_since_epoch()).count();
+    return ms;
+}
+
+uint64_t micros()
+{
+    uint64_t ms = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::
                   now().time_since_epoch()).count();
     return ms;
 }

@@ -30,7 +30,7 @@ Vicsek::Vicsek(SDL_Renderer* r, unsigned short width, unsigned short height, flo
     SDL_SetColorKey( this->image, SDL_TRUE, SDL_MapRGBA( this->image->format, 0x00, 0x00, 0x00, 0xFF ) );
     this->texture = SDL_CreateTextureFromSurface(r, image);
     SDL_SetTextureBlendMode(this->texture, SDL_BLENDMODE_BLEND);
-    SDL_SetTextureAlphaMod(this->texture, 200);
+    SDL_SetTextureAlphaMod(this->texture, 128);
 
     this->step_count = 0;
     this->w = width;
@@ -56,6 +56,7 @@ void Vicsek::shuffle()
         this->p[i].x = (float)d_x(gen);
         this->p[i].y = (float)d_y(gen);
         this->p[i].dir = (float)d_dir(gen);
+        this->p[i].processed = false;
     }
 }
 
@@ -65,7 +66,7 @@ void Vicsek::reset()
     this->step_count = 0;
 }
 
-void Vicsek::hightlightNeighbours(int x, int y)
+void Vicsek::highlightNeighbours(int x, int y)
 {
     std::vector<Particle*> neighbours;
 
@@ -73,9 +74,7 @@ void Vicsek::hightlightNeighbours(int x, int y)
 
     for(int n_np=0; n_np < neighbours.size(); n_np++)
     {
-        neighbours[n_np]->color_r = 255;
-        neighbours[n_np]->color_g = 0;
-        neighbours[n_np]->color_b = 0;
+        neighbours[n_np]->highlighted = true;
     }
 }
 
@@ -140,30 +139,32 @@ Vicsek::Step()
 
 void Vicsek::update_pos_vel()
 {
+    float noise;
+    std::complex<float> temp;
+
+    float two_pi = 2 * M_PI;
+
     for(int i=0; i<this->p.size(); i++)
     {
-        float noise = this->d(gen);
+        noise = this->d(gen);
 
         this->p[i].dir = this->p[i].new_dir + noise;
 
-        std::complex<float> temp = std::polar((float)1.0, this->p[i].dir);
+        temp = std::polar((float)this->v, this->p[i].dir);
 
-        this->p[i].x += this->v * temp.real();
-        this->p[i].y += this->v * temp.imag();
+        this->p[i].x += temp.real();
+        this->p[i].y += temp.imag();
 
-        // reset color to white
+        // reset highlight
+        p[i].highlighted = false;
 
-        p[i].color_r = 255;
-        p[i].color_g = 255;
-        p[i].color_b = 255;
-
-        if(this->p[i].dir > 2 * M_PI)
+        if(this->p[i].dir > two_pi)
         {
-            this->p[i].dir -= 2 * M_PI;
+            this->p[i].dir -= two_pi;
         }
-        if(this->p[i].dir < 0)
+        else if(this->p[i].dir < 0)
         {
-            this->p[i].dir += 2 * M_PI;
+            this->p[i].dir += two_pi;
         }
 
         if(this->p[i].x > this->w)
@@ -219,38 +220,40 @@ float Vicsek::getEta()
     return this->eta;
 }
 
+void Vicsek::setParticleCount(unsigned int n)
+{
+    this->p.clear();
+    this->n = n;
+    this->p = std::vector<Particle>(n);
+
+    this->shuffle();
+
+}
+
 // Draws the particles
 
 Vicsek::Draw(SDL_Renderer* rr)
 {
     SDL_Rect dstrect;
     SDL_Point center;
+    SDL_Rect Rect = {0, 0, 0, 0};
+
+    SDL_QueryTexture(this->texture, NULL, NULL, &Rect.w, &Rect.h);
+
+    center.x = Rect.w/2;
+    center.y = Rect.h/2;
 
     for(int i=0; i < this->n; i++)
     {
-
-        std::complex<float> temp = std::polar((float)1.0, this->p[i].dir);
-
-        SDL_SetRenderDrawColor( rr, p[i].color_r, p[i].color_g, p[i].color_b, 0x00 );
-        //SDL_RenderDrawPoint(r, (int)p[i].x, (int)p[i].y);
-        //SDL_RenderDrawLine(r, p[i].x, p[i].y, p[i].x+(10*-temp.real()),p[i].y+(10*-temp.imag()));
-
-        SDL_Rect Rect = {0, 0, 0, 0};
-
-        SDL_QueryTexture(this->texture, NULL, NULL, &Rect.w, &Rect.h);
-
         dstrect.x = (int)p[i].x - Rect.w;
         dstrect.y = (int)p[i].y - Rect.h/2;
         dstrect.w = Rect.w;
         dstrect.h = Rect.h;
 
-        center.x = Rect.w;
-        center.y = Rect.h/2;
-
         unsigned short r,g,b;
         HSV_TO_RGB((this->p[i].dir / (2*M_PI)) * 360.0, 1.0, 1.0, r, g, b);
 
-        if(this->p[i].color_g == 0)
+        if(this->p[i].highlighted)
         {
             SDL_SetTextureColorMod(this->texture, 255, 255, 255);
         }

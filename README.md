@@ -9,6 +9,7 @@
 - <a href="https://www.libsdl.org/download-2.0.php">SDL2</a>
 - <a href="https://www.libsdl.org/projects/SDL_ttf/">SDL ttf</a>
 - <a href="https://www.libsdl.org/projects/SDL_image/">SDL image</a>
+- <a href="https://developer.nvidia.com/cuda-downloads">openCL / CUDA SDK</a>
 
 <b>There are four implementations of the model:</b>
 

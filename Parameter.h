@@ -13,7 +13,10 @@ private:
 
 public:
 
+    // Constructor
     Parameter();
+
+    // Constructor
     Parameter(float start, float end, int steps);
 
     float getStart();

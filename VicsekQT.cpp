@@ -4,8 +4,14 @@
 #include <random>
 #include <iostream>
 #include <chrono>
+#include <algorithm>
 
 #include "VicsekQT.h"
+
+bool cmp()
+{
+    return true;
+}
 
 void VicsekQT::hightlightNeighbours(int x, int y)
 {
@@ -19,19 +25,21 @@ void VicsekQT::hightlightNeighbours(int x, int y)
         neighbours[n_np]->highlighted = true;
     }
 
-    this->qt.clear();
+    //this->qt.clear();
 }
 
 void VicsekQT::createQuadTree()
 {
-    Rectangle r = Rectangle(this->w/2.0, this->h/2.0, this->w, this->h);
-
-    this->qt = QuadTree(r,4,1);
+    //this->qt.clear();
+    this->qt.empty();
 
     for(int i = 0; i < this->n; i++)
     {
         this->qt.insertPoint(&this->p[i]);
     }
+
+    //remove empty sectors
+    this->qt.cleanup();
 }
 
 void VicsekQT::getNeighbours(int x, int y, std::vector<Particle*> &np)
@@ -84,7 +92,13 @@ void VicsekQT::getNeighbours(int x, int y, std::vector<Particle*> &np)
         float sum_vx = 0;
         float sum_vy = 0;
 
+        //std::sort(this->qt_np.begin(), this->qt_np.end());
+        //std::vector<Particle*>::iterator uni = std::unique(this->qt_np.begin(), this->qt_np.end());
+        //this->qt_np.erase(uni, this->qt_np.end());
+
         int size = this->qt_np.size();
+
+        //std::cout << size << std::endl;
 
         for(int j = 0; j < size; j++)
         {
@@ -151,10 +165,10 @@ VicsekQT::Step()
 
         for(int j=0; j < np.size(); j++)
         {
-            std::complex<float> temp = std::polar((float)1.0, this->np[j]->dir);
+            //std::complex<float> temp = std::polar((float)1.0, this->np[j]->dir);
 
-            sum_vx += temp.real();
-            sum_vy += temp.imag();
+            sum_vx += this->np[j]->get_dir_x();//temp.real();
+            sum_vy += this->np[j]->get_dir_y();//temp.imag();
 
         }
 
@@ -166,7 +180,7 @@ VicsekQT::Step()
 
     this->update_pos_vel();
 
-    this->qt.clear();
+    //this->qt.clear();
 
 }
 

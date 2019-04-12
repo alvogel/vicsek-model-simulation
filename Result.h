@@ -17,10 +17,13 @@ public:
 
     std::list<ResultEntry> data;
 
+    // Destructor
     ~Result();
 
+    // Constructor
     Result();
 
+    // Constructor
     Result(std::string file_name);
 
     void addEntry(float cps, unsigned int w, unsigned int h, float rho, unsigned int n_i, unsigned int n_p, float anv, float v, float eta, float radius);

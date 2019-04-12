@@ -21,8 +21,10 @@ public:
     short right;
 
 
+    // Constructor
     Rectangle();
 
+    // Constructor
     Rectangle(float x, float y, float w, float h);
 
     void setWidth(float w);
@@ -34,6 +36,8 @@ public:
     float getHeight();
 
     bool contains(float x, float y);
+
+    bool contains(Rectangle& range);
 
     bool intersects(Rectangle& range);
 };

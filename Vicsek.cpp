@@ -55,7 +55,8 @@ void Vicsek::shuffle()
     {
         this->p[i].x = (float)d_x(gen);
         this->p[i].y = (float)d_y(gen);
-        this->p[i].dir = (float)d_dir(gen);
+        this->p[i].set_dir((float)d_dir(gen));
+        //this->p[i].dir = (float)d_dir(gen);
         this->p[i].processed = false;
     }
 }
@@ -121,11 +122,8 @@ Vicsek::Step()
 
         for(int j=0; j < np.size(); j++)
         {
-            std::complex<float> temp = std::polar((float)1.0, np[j]->dir);
-
-            sum_vx += temp.real();
-            sum_vy += temp.imag();
-
+            sum_vx += np[j]->get_dir_x();
+            sum_vy += np[j]->get_dir_y();
         }
 
         std::complex<float> temp_new_v (sum_vx, sum_vy);
@@ -148,23 +146,22 @@ void Vicsek::update_pos_vel()
     {
         noise = this->d(gen);
 
-        this->p[i].dir = this->p[i].new_dir + noise;
+        this->p[i].set_dir(this->p[i].new_dir + noise);
 
-        temp = std::polar((float)this->v, this->p[i].dir);
-
-        this->p[i].x += temp.real();
-        this->p[i].y += temp.imag();
+        this->p[i].x += this->p[i].get_dir_x();
+        this->p[i].y += this->p[i].get_dir_y();
 
         // reset highlight
         p[i].highlighted = false;
 
-        if(this->p[i].dir > two_pi)
+        if(this->p[i].get_dir() > two_pi)
         {
-            this->p[i].dir -= two_pi;
+            this->p[i].set_dir(this->p[i].get_dir() - two_pi);
         }
-        else if(this->p[i].dir < 0)
+
+        else if(this->p[i].get_dir() < 0)
         {
-            this->p[i].dir += two_pi;
+            this->p[i].set_dir(this->p[i].get_dir() + two_pi);
         }
 
         if(this->p[i].x > this->w)
@@ -196,10 +193,8 @@ float Vicsek::calc_avg_norm_vel()
 
     for(int i=0; i<this->n; i++)
     {
-        std::complex<float> temp = std::polar((float)1.0, this->p[i].dir);
-
-        sum_vx += temp.real();
-        sum_vy += temp.imag();
+        sum_vx += this->p[i].get_dir_x();
+        sum_vy += this->p[i].get_dir_y();
     }
 
     float length = sqrt(pow(sum_vx, 2) + pow(sum_vy, 2));
@@ -251,7 +246,7 @@ Vicsek::Draw(SDL_Renderer* rr)
         dstrect.h = Rect.h;
 
         unsigned short r,g,b;
-        HSV_TO_RGB((this->p[i].dir / (2*M_PI)) * 360.0, 1.0, 1.0, r, g, b);
+        HSV_TO_RGB((this->p[i].get_dir() / (2*M_PI)) * 360.0, 1.0, 1.0, r, g, b);
 
         if(this->p[i].highlighted)
         {
@@ -264,7 +259,7 @@ Vicsek::Draw(SDL_Renderer* rr)
             SDL_SetTextureColorMod(this->texture, r, g, b);
         }
 
-        SDL_RenderCopyEx(rr, this->texture, &Rect, &dstrect, (this->p[i].dir / (2*M_PI)) * 360, &center, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(rr, this->texture, &Rect, &dstrect, (this->p[i].get_dir() / (2*M_PI)) * 360, &center, SDL_FLIP_NONE);
 
     }
 }

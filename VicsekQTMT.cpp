@@ -61,6 +61,8 @@ void VicsekQTMT::createQuadTree()
 
 void VicsekQTMT::Tree(QuadTree& quad)
 {
+    quad.empty();
+
     for(int i=0; i < this->n; i++)
     {
         if(!this->p[i].processed)
@@ -71,6 +73,9 @@ void VicsekQTMT::Tree(QuadTree& quad)
             }
         }
     }
+
+    //remove empty sectors
+    quad.cleanup();
 }
 
 void VicsekQTMT::Chunk(unsigned int from, unsigned int to)
@@ -93,10 +98,10 @@ void VicsekQTMT::Chunk(unsigned int from, unsigned int to)
 
         for(int j=0; j < np.size(); j++)
         {
-            std::complex<float> temp = std::polar((float)1.0, np[j]->dir);
+            //std::complex<float> temp = std::polar((float)1.0, np[j]->dir);
 
-            sum_vx += temp.real();
-            sum_vy += temp.imag();
+            sum_vx += np[j]->get_dir_x();//temp.real();
+            sum_vy += np[j]->get_dir_y();//temp.imag();
 
         }
 
@@ -268,15 +273,6 @@ VicsekQTMT::Step()
     t8.join();
 
     this->update_pos_vel();
-
-    this->qt1.clear();
-    this->qt2.clear();
-    this->qt3.clear();
-    this->qt4.clear();
-    this->qt5.clear();
-    this->qt6.clear();
-    this->qt7.clear();
-    this->qt8.clear();
 
 }
 

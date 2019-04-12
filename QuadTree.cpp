@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <algorithm>
 
 #include <SDL.h>
 
@@ -23,9 +24,23 @@ QuadTree::QuadTree()
 
 // clears QuadTree and frees allocated memory
 
+void QuadTree::update()
+{
+    for(std::vector<Particle*>::iterator it = this->p.begin() ; it != this->p.end(); ++it)
+    {
+        if(!this->boundary.contains((*it)->x, (*it)->y))
+        {
+            this->p.erase(it);
+        }
+
+    }
+
+}
+
+// clears QuadTree and frees allocated memory
+
 void QuadTree::clear()
 {
-
     if(this->splitted)
     {
         this->nw->clear();
@@ -39,12 +54,51 @@ void QuadTree::clear()
 
         this->splitted = false;
     }
+}
 
+void QuadTree::empty()
+{
+    this->p.clear();
+
+    if(this->splitted)
+    {
+        this->nw->empty();
+        this->ne->empty();
+        this->sw->empty();
+        this->se->empty();
+    }
+}
+
+// clears QuadTree and frees allocated memory
+
+void QuadTree::cleanup()
+{
+    if(this->splitted)
+    {
+        this->nw->cleanup();
+        this->ne->cleanup();
+        this->sw->cleanup();
+        this->se->cleanup();
+
+        if(     this->nw->p.size() == 0 &&
+                this->ne->p.size() == 0 &&
+                this->sw->p.size() == 0 &&
+                this->se->p.size() == 0)
+        {
+
+            delete this->nw;
+            delete this->ne;
+            delete this->sw;
+            delete this->se;
+
+            this->splitted = false;
+        }
+    }
 }
 
 // QuadTree Constructor
 
-QuadTree::QuadTree(Rectangle b, unsigned short cap, unsigned short mul)
+QuadTree::QuadTree(QuadTree *parent, Rectangle b, unsigned short cap, unsigned short mul)
 {
     this->capacity = cap;
     this->mul = mul;
@@ -110,6 +164,23 @@ unsigned short QuadTree::nodes()
     return nodes;
 }
 
+bool QuadTree::queryAll(std::vector<Particle*>& rp)
+{
+    for(int i = 0; i<this->p.size(); i++)
+    {
+        rp.push_back(this->p[i]);
+    }
+
+    if(splitted)
+    {
+        this->nw->queryAll(rp);
+        this->ne->queryAll(rp);
+        this->sw->queryAll(rp);
+        this->se->queryAll(rp);
+    }
+
+}
+
 // returns the particles which are in a rectangular space
 
 bool QuadTree::query(Rectangle& r, std::vector<Particle*>& rp)
@@ -117,11 +188,16 @@ bool QuadTree::query(Rectangle& r, std::vector<Particle*>& rp)
     int elements = this->p.size();
     if(elements > 0)
     {
-        if(this->boundary.intersects(r))
+        if(r.contains(this->boundary))
+        {
+            this->queryAll(rp);
+            return true;
+        }
+        else if(this->boundary.intersects(r))
         {
             for(int i = 0; i<elements; i++)
             {
-                rp.push_back((this->p[i]));
+                rp.push_back(this->p[i]);
             }
 
             if(splitted)
@@ -149,7 +225,6 @@ bool QuadTree::query(Rectangle& r, std::vector<Particle*>& rp)
 
 bool QuadTree::insertPoint(Particle* ip)
 {
-
     if(!this->boundary.contains(ip->x, ip->y))
     {
         return false;
@@ -161,30 +236,8 @@ bool QuadTree::insertPoint(Particle* ip)
         return true;
     }
 
-    if(!splitted)
-    {
+    this->split();
 
-        float new_width = this->boundary.getWidth() / 2;
-        float new_height = this->boundary.getHeight() / 2;
-
-        float center_nw_x = this->boundary.x - (this->boundary.getWidth() / 4);
-        float center_nw_y = this->boundary.y - (this->boundary.getHeight() / 4);
-        this->nw = new QuadTree(Rectangle(center_nw_x,center_nw_y,new_width,new_height), this->capacity*this->mul, this->mul);
-
-        float center_ne_x = this->boundary.x + (this->boundary.getWidth() / 4);
-        float center_ne_y = this->boundary.y - (this->boundary.getHeight() / 4);
-        this->ne = new QuadTree(Rectangle(center_ne_x,center_ne_y,new_width,new_height), this->capacity*this->mul, this->mul);
-
-        float center_sw_x = this->boundary.x - (this->boundary.getWidth() / 4);
-        float center_sw_y = this->boundary.y + (this->boundary.getHeight() / 4);
-        this->sw = new QuadTree(Rectangle(center_sw_x,center_sw_y,new_width,new_height), this->capacity*this->mul, this->mul);
-
-        float center_se_x = this->boundary.x + (this->boundary.getWidth() / 4);
-        float center_se_y = this->boundary.y + (this->boundary.getHeight() / 4);
-        this->se = new QuadTree(Rectangle(center_se_x,center_se_y,new_width,new_height), this->capacity*this->mul, this->mul);
-
-        this->splitted = true;
-    }
 
     if(!this->nw->insertPoint(ip))
     {
@@ -214,6 +267,33 @@ bool QuadTree::insertPoint(Particle* ip)
     else
     {
         return true;
+    }
+}
+
+void QuadTree::split()
+{
+    if(!this->splitted)
+    {
+        float new_width = this->boundary.getWidth() / 2;
+        float new_height = this->boundary.getHeight() / 2;
+
+        float center_nw_x = this->boundary.x - (this->boundary.getWidth() / 4);
+        float center_nw_y = this->boundary.y - (this->boundary.getHeight() / 4);
+        this->nw = new QuadTree(this, Rectangle(center_nw_x,center_nw_y,new_width,new_height), this->capacity*this->mul, this->mul);
+
+        float center_ne_x = this->boundary.x + (this->boundary.getWidth() / 4);
+        float center_ne_y = this->boundary.y - (this->boundary.getHeight() / 4);
+        this->ne = new QuadTree(this, Rectangle(center_ne_x,center_ne_y,new_width,new_height), this->capacity*this->mul, this->mul);
+
+        float center_sw_x = this->boundary.x - (this->boundary.getWidth() / 4);
+        float center_sw_y = this->boundary.y + (this->boundary.getHeight() / 4);
+        this->sw = new QuadTree(this, Rectangle(center_sw_x,center_sw_y,new_width,new_height), this->capacity*this->mul, this->mul);
+
+        float center_se_x = this->boundary.x + (this->boundary.getWidth() / 4);
+        float center_se_y = this->boundary.y + (this->boundary.getHeight() / 4);
+        this->se = new QuadTree(this, Rectangle(center_se_x,center_se_y,new_width,new_height), this->capacity*this->mul, this->mul);
+
+        this->splitted = true;
     }
 }
 

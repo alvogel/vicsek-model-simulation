@@ -55,6 +55,36 @@ bool Rectangle::contains(float x, float y)
         return false;
 }
 
+// checks if a point is inside a rectangle
+
+bool Rectangle::contains(Rectangle& range)
+{
+
+    float left = this->x - (this->width / 2);
+    float bottom = this->y - (this->height / 2);
+    float right = this->x + (this->width / 2);
+    float top = this->y + (this->height / 2);
+
+    float range_left = range.x - (range.width / 2);
+    float range_bottom = range.y - (range.height / 2);
+    float range_right = range.x + (range.width / 2);
+    float range_top = range.y + (range.height / 2);
+
+    if(range_left   >= left &&
+       range_right  <= right &&
+       range_bottom >= bottom &&
+       range_top    <= top)
+    {
+        return true;
+    }
+
+    else
+    {
+        return false;
+    }
+
+}
+
 // checks if two rectangles are intersecting each other
 
 bool Rectangle::intersects(Rectangle& range)

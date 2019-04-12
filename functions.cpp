@@ -41,6 +41,8 @@ extern const int SCREEN_HEIGHT;
 extern TTF_Font* font;
 extern std::mutex mm;
 
+// Draw everything to the renderer
+
 void Draw(SDL_Renderer *renderer, Vicsek& quad)
 {
     int frames = 0;
@@ -48,7 +50,7 @@ void Draw(SDL_Renderer *renderer, Vicsek& quad)
 
     while(1)
     {
-        mm.lock();
+        //mm.lock();
 
         SDL_SetRenderDrawColor( renderer, 0x0, 0x0, 0x0, 0x0 );
         SDL_RenderClear( renderer );
@@ -144,9 +146,8 @@ void Draw(SDL_Renderer *renderer, Vicsek& quad)
 
         for(int i=0; i<quad.p.size(); i++)
         {
-            int box = (int)floor((quad.p[i].dir/(2.0*M_PI)) * boxes);
+            int box = floor((quad.p[i].get_dir()/(2.0*M_PI)) * boxes);
 
-            //if(box >= 0 && box <= boxes)
             histogram[box%boxes]++;
         }
 
@@ -209,7 +210,9 @@ void Draw(SDL_Renderer *renderer, Vicsek& quad)
             frames = 0;
             start_time = micros();
         }
-        mm.unlock();
+
+        //mm.unlock();
+
     }
 
 

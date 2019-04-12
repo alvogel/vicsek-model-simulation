@@ -54,7 +54,7 @@ unsigned int frames = 0;
 int main( int argc, char* args[] )
 {
     // Parameter START / END / NUMBER OF STEPS
-    v =         Parameter(2,    0.1,    0);
+    v =         Parameter(1,    0.1,    0);
     eta =       Parameter(0.4,  2*M_PI, 10);
     radius =    Parameter(20,   10,     0);
     n =         Parameter(10000,  500,      0); // MAX 65536
@@ -100,17 +100,17 @@ int main( int argc, char* args[] )
 
             //Vicsek sim = Vicsek(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, v.getStart(), radius.getStart(), eta.getStart(), (int)n.getStart()); // Vicsek-Model with naive neighbour search O(n^2)
             //VicsekQT sim = VicsekQT(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, v.getStart(), radius.getStart(), eta.getStart(), (int)n.getStart()); // Vicsek-Model using QuadTree for neighbour search O(log(n))
-            VicsekQTMT sim = VicsekQTMT(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, v.getStart(), radius.getStart(), eta.getStart(), (int)n.getStart()); // Vicsek-Model using QuadTree for neighbour search O(log(n)) and Multi-Threading
-            //VicsekOCL sim = VicsekOCL(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, v.getStart(), radius.getStart(), eta.getStart(), (int)n.getStart());
+            //VicsekQTMT sim = VicsekQTMT(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, v.getStart(), radius.getStart(), eta.getStart(), (int)n.getStart()); // Vicsek-Model using QuadTree for neighbour search O(log(n)) and Multi-Threading
+            VicsekOCL sim = VicsekOCL(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, v.getStart(), radius.getStart(), eta.getStart(), (int)n.getStart());
 
             std::thread t1(Draw, renderer, std::ref(sim));
 
             n.reset();
             while(true)
             {
-                mm.lock();
+                //mm.lock();
                 //sim.setParticleCount((int)n.getCurrent());
-                mm.unlock();
+                //mm.unlock();
 
                 eta.reset();
                 while(true)
@@ -153,10 +153,8 @@ int main( int argc, char* args[] )
                                 }
                             }
 
-                            if(highlight_mouse_neighbours)
-                            {
-                                mm.lock();
-                            }
+                            //mm.lock();
+
                             sim.Step();
 
                             if(highlight_mouse_neighbours)
@@ -164,10 +162,7 @@ int main( int argc, char* args[] )
                                 sim.highlightNeighbours(mouse_x, mouse_y);
                             }
 
-                            if(highlight_mouse_neighbours)
-                            {
-                                mm.unlock();
-                            }
+                            //mm.unlock();
 
                             res.addEntry(CPS,
                                          SCREEN_WIDTH,

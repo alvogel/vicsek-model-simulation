@@ -50,20 +50,22 @@ private:
 
 public:
 
+    // Constructor
     VicsekOCL();
 
+    // Constructor
     VicsekOCL(SDL_Renderer* r, int width, int height, float v, float radius, float eta, unsigned int n_particles) : Vicsek(r, width, height, v, radius, eta, n_particles)
     {
         matrix = (particle*)malloc(sizeof(particle)* this->n);
 
         for(int i=0; i<this->p.size(); i++)
         {
-            std::complex<float> temp = std::polar((float)1.0, this->p[i].dir);
+            //std::complex<float> temp = std::polar((float)1.0, this->p[i].dir);
 
             matrix[i].x = this->p[i].x;
             matrix[i].y = this->p[i].y;
-            matrix[i].vx = temp.real();
-            matrix[i].vy = temp.imag();
+            matrix[i].vx = this->p[i].get_dir_x();//temp.real();
+            matrix[i].vy = this->p[i].get_dir_y();//temp.imag();
         }
 
         // Load the kernel source code into the array source_str
@@ -140,8 +142,10 @@ public:
         // Create a program from the kernel source
         cl_program program = clCreateProgramWithSource(context, 1, (const char **)&source_str, (const size_t *)&source_size, &ret);
 
+        char options[] = "";//"-cl-unsafe-math-optimizations -cl-mad-enable -cl-no-signed-zeros -cl-finite-math-only -cl-fast-relaxed-math";
+
         // Build the program
-        ret = clBuildProgram(program, 1, &device_id, NULL, NULL, NULL);
+        ret = clBuildProgram(program, 1, &device_id, options, NULL, NULL);
 
         // Create the OpenCL kernel
         this->kernel = clCreateKernel(program, "vicsek", &ret);

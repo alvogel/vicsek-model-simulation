@@ -15,6 +15,7 @@ private:
     std::vector<Particle*> p;
     unsigned short capacity;
     unsigned short mul;
+    QuadTree *parent;
 
 
 public:
@@ -26,13 +27,24 @@ public:
     QuadTree *sw;
     QuadTree *se;
 
+    // Destructor
     ~QuadTree();
 
+    // Constructor
     QuadTree();
 
-    QuadTree(Rectangle b, unsigned short cap, unsigned short mul);
+    // Constructor
+    QuadTree(QuadTree *parent, Rectangle b, unsigned short cap, unsigned short mul);
+
+    void reserve(int depth);
 
     void clear();
+
+    void empty();
+
+    void cleanup();
+
+    void update();
 
     void Draw(SDL_Renderer* r);
 
@@ -40,9 +52,13 @@ public:
 
     unsigned short nodes();
 
+    bool queryAll(std::vector<Particle*>& rp);
+
     bool query(Rectangle& r, std::vector<Particle*>& rp);
 
     bool insertPoint(Particle* ip);
+
+    void split();
 
 };
 

@@ -17,12 +17,12 @@ VicsekOCL::Step()
 
     for(int i=0; i<this->p.size(); i++)
     {
-        temp = std::polar((float)1.0, this->p[i].dir);
+        //temp = std::polar((float)1.0, this->p[i].dir);
 
         matrix[i].x = this->p[i].x;
         matrix[i].y = this->p[i].y;
-        matrix[i].vx = temp.real();
-        matrix[i].vy = temp.imag();
+        matrix[i].vx = this->p[i].get_dir_x();//temp.real();
+        matrix[i].vy = this->p[i].get_dir_y();//temp.imag();
     }
 
     header h;

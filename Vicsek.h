@@ -28,8 +28,10 @@ public:
     unsigned int n;
     std::vector<Particle> p;
 
+    // Constructor
     Vicsek();
 
+    // Constructor
     Vicsek(SDL_Renderer* r, unsigned short width, unsigned short height, float v, float radius, float eta, unsigned int n_particles);
 
     Step();

@@ -18,10 +18,15 @@ public:
 
     QuadTree qt;
 
+    // Constructor
     VicsekQT();
 
+    // Constructor
     VicsekQT(SDL_Renderer* r, int width, int height, float v, float radius, float eta, unsigned int n_particles) : Vicsek(r, width, height, v, radius, eta, n_particles)
     {
+        Rectangle rect = Rectangle(this->w/2.0, this->h/2.0, this->w, this->h);
+        this->qt = QuadTree(NULL, rect,4,1);
+
         this->qt_np.reserve(this->n);
         this->np.reserve(this->n);
     }

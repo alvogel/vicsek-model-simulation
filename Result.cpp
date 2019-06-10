@@ -21,7 +21,7 @@ void Result::saveToFile()
 
     file.open("result.dat");
 
-    file << "#"  << "\t" << "CPD"  << "\t" << "WIDTH"  << "\t" << "HEIGHT"  << "\t" << "density"  << "\t" << "#simulation steps"  << "\t" << "particle count" << "\t" << "average normalized velocity" << "\t" << "velocity" << "\t" << "eta" << "\t" << "radius" <<"\n";
+    file << "#"  << "\t" << "CPD"  << "\t" << "WIDTH"  << "\t" << "HEIGHT"  << "\t" << "density"  << "\t" << "#simulation_steps"  << "\t" << "particle_count" << "\t" << "average_normalized_velocity" << "\t" << "velocity" << "\t" << "eta" << "\t" << "radius" <<"\n";
 
     std::list<ResultEntry>::iterator iter_data;
 

@@ -18,6 +18,7 @@ extern std::mutex mm;
 
 auto seed_time = std::chrono::system_clock::now().time_since_epoch().count();
 
+std::default_random_engine generator;
 std::random_device rd{};
 std::seed_seq seed{seed_time};
 std::mt19937 gen{seed};
@@ -39,7 +40,6 @@ Vicsek::Vicsek(SDL_Renderer* r, unsigned short width, unsigned short height, flo
     this->eta = eta;
     this->v = v;
     this->n = n_particles;
-    this->d = std::normal_distribution<float>(0, this->eta / 2.0);
     this->p = std::vector<Particle>(n_particles);
 
     this->shuffle();
@@ -61,11 +61,15 @@ void Vicsek::shuffle()
     }
 }
 
+// resets the simulation and shuffles particles directions and positions
+
 void Vicsek::reset()
 {
     this->shuffle();
     this->step_count = 0;
 }
+
+// Highlight all neighbour particles within interaction radius from mouse position
 
 void Vicsek::highlightNeighbours(int x, int y)
 {
@@ -73,11 +77,15 @@ void Vicsek::highlightNeighbours(int x, int y)
 
     this->getNeighbours(x, y, neighbours);
 
+    // set all neighbours as highlighted
+
     for(int n_np=0; n_np < neighbours.size(); n_np++)
     {
         neighbours[n_np]->highlighted = true;
     }
 }
+
+// Find all neighbour particles within interaction radius
 
 void Vicsek::getNeighbours(int x, int y, std::vector<Particle*> &p)
 {
@@ -89,6 +97,7 @@ void Vicsek::getNeighbours(int x, int y, std::vector<Particle*> &p)
     {
         for(int j=0; j < this->n; j++)
         {
+            // calculate square distances(this saves time because we dont need to calculate the squareroot) for center map and shadow copies
             float distance_center   = pow(x - this->p[j].x, 2)              + pow(y - this->p[j].y, 2);
             float distance_east     = pow(x - (this->p[j].x + this->w), 2)  + pow(y - this->p[j].y, 2);
             float distance_north    = pow(x - this->p[j].x, 2)              + pow(y - (this->p[j].y - this->h), 2);
@@ -102,11 +111,14 @@ void Vicsek::getNeighbours(int x, int y, std::vector<Particle*> &p)
                     distance_south < square_r
               )
             {
+                // append neighbour reference to neighbour list
                 p.push_back(&this->p[j]);
             }
         }
     }
 }
+
+// Calculate one simualtion step
 
 Vicsek::Step()
 {
@@ -117,17 +129,21 @@ Vicsek::Step()
         float sum_vx = 0;
         float sum_vy = 0;
 
+        // Find neighbours within interaction radius
         std::vector<Particle*> np;
         this->getNeighbours(this->p[i].x, this->p[i].y, np);
 
+        // add vector components to sum
         for(int j=0; j < np.size(); j++)
         {
             sum_vx += np[j]->get_dir_x();
             sum_vy += np[j]->get_dir_y();
         }
 
+        // put x and y into complex number
         std::complex<float> temp_new_v (sum_vx, sum_vy);
 
+        // get angle from vector
         this->p[i].new_dir = std::arg(temp_new_v);
 
     }
@@ -135,25 +151,33 @@ Vicsek::Step()
     this->update_pos_vel();
 }
 
+// Updates new positions and directions to particles
+
 void Vicsek::update_pos_vel()
 {
     float noise;
     std::complex<float> temp;
 
+    std::uniform_real_distribution<double> nse(-this->eta, this->eta);
+
     float two_pi = 2 * M_PI;
 
     for(int i=0; i<this->p.size(); i++)
     {
-        noise = this->d(gen);
+        // apply new position to particle
+        this->p[i].x += this->v * this->p[i].get_dir_x();
+        this->p[i].y += this->v * this->p[i].get_dir_y();
 
+        // genrate noise
+        noise = (double)nse(generator) * M_PI;
+
+        // set direction for new particle + noise
         this->p[i].set_dir(this->p[i].new_dir + noise);
-
-        this->p[i].x += this->p[i].get_dir_x();
-        this->p[i].y += this->p[i].get_dir_y();
 
         // reset highlight
         p[i].highlighted = false;
 
+        // crop direction that its 0 <= dir <= 2*pi
         if(this->p[i].get_dir() > two_pi)
         {
             this->p[i].set_dir(this->p[i].get_dir() - two_pi);
@@ -164,6 +188,7 @@ void Vicsek::update_pos_vel()
             this->p[i].set_dir(this->p[i].get_dir() + two_pi);
         }
 
+        // crop position that its 0 <= x/y <= map size
         if(this->p[i].x > this->w)
         {
             this->p[i].x -= this->w;
@@ -186,6 +211,8 @@ void Vicsek::update_pos_vel()
     }
 }
 
+// calculates and returns average normalized velocity
+
 float Vicsek::calc_avg_norm_vel()
 {
     float sum_vx = 0;
@@ -204,16 +231,22 @@ float Vicsek::calc_avg_norm_vel()
     return anv;
 }
 
+// set noise parameter
+
 void Vicsek::setEta(float eta)
 {
     this->eta = eta;
-    this->d = std::normal_distribution<float>(0, this->eta / 2.0);
+    std::uniform_real_distribution<double> nse(0, this->eta);
 }
+
+// get noise parameter
 
 float Vicsek::getEta()
 {
     return this->eta;
 }
+
+// set amount of particles
 
 void Vicsek::setParticleCount(unsigned int n)
 {

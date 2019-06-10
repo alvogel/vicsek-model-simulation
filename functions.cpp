@@ -50,7 +50,7 @@ void Draw(SDL_Renderer *renderer, Vicsek& quad)
 
     while(1)
     {
-        //mm.lock();
+        mm.lock();
 
         SDL_SetRenderDrawColor( renderer, 0x0, 0x0, 0x0, 0x0 );
         SDL_RenderClear( renderer );
@@ -139,7 +139,6 @@ void Draw(SDL_Renderer *renderer, Vicsek& quad)
         SDL_RenderDrawLine(renderer, SCREEN_WIDTH, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
         SDL_RenderDrawLine(renderer, SCREEN_WIDTH, SCREEN_HEIGHT/2, SCREEN_WIDTH+250, SCREEN_HEIGHT/2);
 
-
         //int circumference = 2 * 110 * M_PI;
         int boxes = 2 * 110 * M_PI;
         std::vector<int> histogram(boxes, 0);
@@ -211,7 +210,7 @@ void Draw(SDL_Renderer *renderer, Vicsek& quad)
             start_time = micros();
         }
 
-        //mm.unlock();
+        mm.unlock();
 
     }
 

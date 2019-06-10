@@ -18,48 +18,37 @@ typedef struct
 
 __kernel void vicsek(__global const header *H, __global const particle *A, __global particle *C)
 {
-
     int index = get_global_id(0);
 
-    float2 sum_v;
-    sum_v.x = 0;
-    sum_v.y = 0;
+    float x = A[index].x;
+    float y = A[index].y;
 
-    float square_r = pown(H->r,2);
+    float2 sum_v;
+    sum_v.x = 0.0f;
+    sum_v.y = 0.0f;
+
+    float square_r = native_powr(H->r,2);
 
     for(int i=0; i<H->n; i++)
     {
+        float dx_c = x - A[i].x;
+        float dx_cs = dx_c * dx_c;
 
-        float distance_center;
-        float distance_east;
-        float distance_north;
-        float distance_west;
-        float distance_south;
+        float dy_c = y - A[i].y;
+        float dy_cs = dy_c * dy_c;
+        float distance_center = dx_cs + dy_cs;
 
-        float dx_c,dy_c;
-        float dx_cs,dy_cs;
-        float dx_e;
-        float dy_n;
-        float dx_w;
-        float dy_s;
+        float dx_e = dx_c + H->width;
+        float distance_east   = (dx_e * dx_e) + dy_cs;
 
-        dx_c = A[index].x - A[i].x;
-        dx_cs = dx_c * dx_c;
-        dy_c = A[index].y - A[i].y;
-        dy_cs = dy_c * dy_c;
-        distance_center = dx_cs + dy_cs;
+        float dy_n = dy_c - H->height;
+        float distance_north  = dx_cs + (dy_n * dy_n);
 
-        dx_e = dx_c + H->width;
-        distance_east   = (dx_e * dx_e) + dy_cs;
+        float dx_w = dx_c - H->width;
+        float distance_west   = (dx_w * dx_w) + dy_cs;
 
-        dy_n = dy_c - H->height;
-        distance_north  = dx_cs + (dy_n * dy_n);
-
-        dx_w = dx_c - H->width;
-        distance_west   = (dx_w * dx_w) + dy_cs;
-
-        dy_s = dy_c + H->height;
-        distance_south  = dx_cs + (dy_s * dy_s);
+        float dy_s = dy_c + H->height;
+        float distance_south  = dx_cs + (dy_s * dy_s);
 
         if(     distance_center < square_r ||
                 distance_east < square_r ||
@@ -75,9 +64,7 @@ __kernel void vicsek(__global const header *H, __global const particle *A, __glo
 
     }
 
-    float2 norm_v = fast_normalize(sum_v);
-
-    C[index].vx = norm_v.x;
-    C[index].vy = norm_v.y;
+    C[index].vx = sum_v.x;
+    C[index].vy = sum_v.y;
 
 }

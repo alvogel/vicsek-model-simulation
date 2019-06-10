@@ -9,7 +9,7 @@
 #include <cstddef>
 
 #include <SDL.h>
-#include "SDL_ttf.h"
+#include <SDL_ttf.h>
 #include <SDL_image.h>
 
 #include "Vicsek.h"
@@ -51,16 +51,19 @@ std::mutex mm;
 unsigned long long start_time = micros();
 unsigned int frames = 0;
 
+// factor to scale parameters instead of changing the map size
+float multi = 11.3;
+
 int main( int argc, char* args[] )
 {
     // Parameter START / END / NUMBER OF STEPS
-    v =         Parameter(1,    0.1,    0);
-    eta =       Parameter(0.4,  2*M_PI, 10);
-    radius =    Parameter(20,   10,     0);
-    n =         Parameter(10000,  500,      0); // MAX 65536
+    v       = Parameter(0.05 * multi,    1 * multi, 0);       // Velocity
+    eta     = Parameter(0.1,  1.0, 0);                        // noise - ([0, 1] -> [0 , pi])
+    radius  = Parameter(1 * multi,   10 * multi, 0);          // interaction radius
+    n       = Parameter(8192,  500, 0);                       // Particle count
 
     int max_iterations = 1000000;
-    int avg_count = 100;
+    int avg_count = (int)(max_iterations*0.1);
 
     //The window we'll be rendering to
     SDL_Window* window = NULL;
@@ -70,7 +73,7 @@ int main( int argc, char* args[] )
     //Initialize SDL
     if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
     {
-        printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
+        cout << "SDL could not initialize! SDL_Error: " << SDL_GetError() << endl;
     }
 
     else
@@ -82,15 +85,14 @@ int main( int argc, char* args[] )
 
         if (font == NULL)
         {
-            printf("Unable to load font: %s %s \n", TTF_GetError());
-            // Handle the error here.
+            cout << "Unable to load font: " << TTF_GetError() << endl;
         }
 
         //Create window
-        window = SDL_CreateWindow( "Flocking", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH+250, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+        window = SDL_CreateWindow( "Vicsek-model-simulation", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH+250, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
         if( window == NULL )
         {
-            printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
+            cout << "Window could not be created! SDL_Error: " << SDL_GetError() << endl;
         }
 
         else
@@ -98,13 +100,23 @@ int main( int argc, char* args[] )
 
             renderer = SDL_CreateRenderer( window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
+            // You can choose which Vicsek implementation you use
+
+            // only naive implementation of the model
             //Vicsek sim = Vicsek(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, v.getStart(), radius.getStart(), eta.getStart(), (int)n.getStart()); // Vicsek-Model with naive neighbour search O(n^2)
+
+            // QuadTree
             //VicsekQT sim = VicsekQT(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, v.getStart(), radius.getStart(), eta.getStart(), (int)n.getStart()); // Vicsek-Model using QuadTree for neighbour search O(log(n))
+
+            // Multi threading with QuadTree
             //VicsekQTMT sim = VicsekQTMT(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, v.getStart(), radius.getStart(), eta.getStart(), (int)n.getStart()); // Vicsek-Model using QuadTree for neighbour search O(log(n)) and Multi-Threading
+
+            // hardware acceleration with graphics card (OpenCL)
             VicsekOCL sim = VicsekOCL(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, v.getStart(), radius.getStart(), eta.getStart(), (int)n.getStart());
 
             std::thread t1(Draw, renderer, std::ref(sim));
 
+            // reset particle count
             n.reset();
             while(true)
             {
@@ -112,18 +124,24 @@ int main( int argc, char* args[] )
                 //sim.setParticleCount((int)n.getCurrent());
                 //mm.unlock();
 
+                // reset noise
                 eta.reset();
                 while(true)
                 {
+                    // set current simulation noise parameter
                     sim.setEta(eta.getCurrent());
 
                     radius.reset();
                     while(true)
                     {
+                        // set current simulation radius parameter
                         sim.radius = radius.getCurrent();
 
+                        // simulate until maximum iteration count
                         while(sim.step_count < max_iterations)
                         {
+
+                            // catch SDL events
                             SDL_Event event;
 
                             while (SDL_PollEvent(&event))
@@ -153,21 +171,26 @@ int main( int argc, char* args[] )
                                 }
                             }
 
-                            //mm.lock();
+                            // lock for other threads
+                            mm.lock();
 
+                            // execute one simulation
                             sim.Step();
 
+                            // highlight neighbours near the mouse pointer
                             if(highlight_mouse_neighbours)
                             {
                                 sim.highlightNeighbours(mouse_x, mouse_y);
                             }
 
-                            //mm.unlock();
+                            // unlock for other threads
+                            mm.unlock();
 
+                            // add an entry to result set
                             res.addEntry(CPS,
                                          SCREEN_WIDTH,
                                          SCREEN_HEIGHT,
-                                         n.getCurrent() / (SCREEN_WIDTH * SCREEN_HEIGHT),
+                                         n.getCurrent() / ((SCREEN_WIDTH/multi) * (SCREEN_HEIGHT/multi)),
                                          sim.step_count,
                                          n.getCurrent(),
                                          sim.calc_avg_norm_vel(),
@@ -175,6 +198,7 @@ int main( int argc, char* args[] )
                                          sim.getEta(),
                                          radius.getCurrent());
 
+                            // calculates the speed of simulation
                             frames++;
                             unsigned long long runtime = micros() - start_time;
                             if(runtime > 1000000)
@@ -188,6 +212,7 @@ int main( int argc, char* args[] )
 
                         }
 
+                        // add averaged simulations results to result set
                         ResultEntry avg = res.getAvgLastN(avg_count);
                         res_avg.addEntry(avg.cps,
                                          avg.world_width,
@@ -200,26 +225,35 @@ int main( int argc, char* args[] )
                                          avg.eta,
                                          avg.radius);
 
+                        // clear Result set which calcs the average
                         res.clear();
+
+                        // resets the simulation to prepare for changed parameters
                         sim.reset();
 
+                        // iterate to next radius parameter
                         radius.next();
 
+                        // leave when radius parameters is at maximum
                         if(radius.isFinished())
                         {
                             break;
                         }
                     }
 
+                    // iterate to next noise value
                     eta.next();
 
+                    // leave when noise parameters is at maximum
                     if(eta.isFinished())
                     {
                         break;
                     }
                 }
+                // iterate to next particle count value
                 n.next();
 
+                // leave when particle parameters is at maximum
                 if(n.isFinished())
                 {
                     break;
@@ -239,5 +273,6 @@ int main( int argc, char* args[] )
     SDL_Quit();
 
     return 0;
+
 }
 

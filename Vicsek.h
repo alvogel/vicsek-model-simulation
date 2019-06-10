@@ -34,25 +34,45 @@ public:
     // Constructor
     Vicsek(SDL_Renderer* r, unsigned short width, unsigned short height, float v, float radius, float eta, unsigned int n_particles);
 
+    // run one Simulation step
+
     Step();
+
+    // Draw Particles to renderer
 
     Draw(SDL_Renderer* r);
 
+    // highlight neigbours of mouse position
+
     void highlightNeighbours(int x, int y);
+
+    // get neighbours particles of position
 
     void getNeighbours(int x, int y, std::vector<Particle*> &p);
 
+    // shuffle particles positions and directions
+
     void shuffle();
+
+    // apply new positions and directions
 
     void update_pos_vel();
 
     float calc_avg_norm_vel();
 
+    // set noise parameter
+
     void setEta(float eta);
+
+    // set amount of particles
 
     void setParticleCount(unsigned int n);
 
+    // get noise parameter
+
     float getEta();
+
+    // reset simulation shuffle particles positions and directions
 
     void reset();
 
